@@ -2,14 +2,9 @@ import {
   CameraType,
   useCameraPermissions
 } from "expo-camera";
-import * as FileSystem from "expo-file-system";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 import React, { useRef, useState } from "react";
 import {
   Alert,
-  Platform,
-  Image as RNImage,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,13 +13,13 @@ import {
 } from "react-native";
 
 import { router } from "expo-router";
+import { MultiStepComponent } from "../../components/MultiStep";
 import StepCamera from "../../components/StepCamera";
 import StepLivestock from "../../components/StepLivestock";
 import StepNationalId from "../../components/StepNationalID";
 import StepOperation from "../../components/StepOperation";
 import StepPersonalInfo from "../../components/StepPersonalInfo";
 import { useUser } from "../../Hooks/useUserGlobal";
-import { loadSession } from "../../storage/saveSession";
 
 
 // bundled logo asset
@@ -244,246 +239,246 @@ const validateStep = () => {
  
 
   // --- PDF Certificate download (cross-platform) ---
-  const handleDownload = async () => {
-    try {
-      // Load the logged-in agent's session data
-      const agentSession = await loadSession();
-      if (!agentSession) {
-        throw new Error("No agent session found. Please log in again.");
-      }
+  // const handleDownload = async () => {
+  //   try {
+  //     // Load the logged-in agent's session data
+  //     const agentSession = await loadSession();
+  //     if (!agentSession) {
+  //       throw new Error("No agent session found. Please log in again.");
+  //     }
 
-      const agentId = agentSession.registration_number || agentSession.national_id || "N/A";
-      const agentName = agentSession.name || "Unknown Agent";
-      const certificateNumber = `CERT-${Date.now()}`;
+  //     const agentId = agentSession.registration_number || agentSession.national_id || "N/A";
+  //     const agentName = agentSession.name || "Unknown Agent";
+  //     const certificateNumber = `CERT-${Date.now()}`;
 
-      const cert = {
-        firstName,
-        lastName,
-        gender,
-        phone,
-        dob: dob?.toLocaleDateString() ?? "",
-        country,
-        city,
-        address,
-        nationalId,
-        certificateNumber,
-        agentId,
-        agentName,
-      };
+  //     const cert = {
+  //       firstName,
+  //       lastName,
+  //       gender,
+  //       phone,
+  //       dob: dob?.toLocaleDateString() ?? "",
+  //       country,
+  //       city,
+  //       address,
+  //       nationalId,
+  //       certificateNumber,
+  //       agentId,
+  //       agentName,
+  //     };
 
-      console.log("handleDownload: starting PDF generation");
-      console.log("handleDownload: Agent ID:", agentId, "Agent Name:", agentName);
-      console.log("handleDownload: Certificate Number:", certificateNumber);
+  //     console.log("handleDownload: starting PDF generation");
+  //     console.log("handleDownload: Agent ID:", agentId, "Agent Name:", agentName);
+  //     console.log("handleDownload: Certificate Number:", certificateNumber);
 
-      // Embed photo from camera base64 if available (most reliable)
-      let photoSrc: string | null = null;
-      if (photoBase64) {
-        photoSrc = `data:image/jpeg;base64,${photoBase64}`;
-        console.log("handleDownload: embedding photo from camera base64, size:", photoSrc.length);
-      }
+  //     // Embed photo from camera base64 if available (most reliable)
+  //     let photoSrc: string | null = null;
+  //     if (photoBase64) {
+  //       photoSrc = `data:image/jpeg;base64,${photoBase64}`;
+  //       console.log("handleDownload: embedding photo from camera base64, size:", photoSrc.length);
+  //     }
 
-      // Prepare logo source (try to embed as base64, fallback to uri)
-      let logoSrc: string | null = null;
-      try {
-        const resolved = RNImage.resolveAssetSource(logoAsset);
-        const logoUri = resolved?.uri;
-        if (logoUri) {
-          try {
-            const ext = logoUri.split(".").pop()?.split("?")[0]?.toLowerCase();
-            const mime = ext === "png" ? "image/png" : "image/jpeg";
-            const base64 = await (FileSystem as any).readAsStringAsync(logoUri, { encoding: (FileSystem as any).EncodingType.Base64 });
-            logoSrc = `data:${mime};base64,${base64}`;
-          } catch (e) {
-            console.warn("Could not read bundled logo as base64, using uri instead:", e);
-            logoSrc = logoUri;
-          }
-        }
-      } catch (e) {
-        console.warn("Error resolving logo asset:", e);
-      }
+  //     // Prepare logo source (try to embed as base64, fallback to uri)
+  //     let logoSrc: string | null = null;
+  //     try {
+  //       const resolved = RNImage.resolveAssetSource(logoAsset);
+  //       const logoUri = resolved?.uri;
+  //       if (logoUri) {
+  //         try {
+  //           const ext = logoUri.split(".").pop()?.split("?")[0]?.toLowerCase();
+  //           const mime = ext === "png" ? "image/png" : "image/jpeg";
+  //           const base64 = await (FileSystem as any).readAsStringAsync(logoUri, { encoding: (FileSystem as any).EncodingType.Base64 });
+  //           logoSrc = `data:${mime};base64,${base64}`;
+  //         } catch (e) {
+  //           console.warn("Could not read bundled logo as base64, using uri instead:", e);
+  //           logoSrc = logoUri;
+  //         }
+  //       }
+  //     } catch (e) {
+  //       console.warn("Error resolving logo asset:", e);
+  //     }
 
-      // Quick debug: tell whether we will embed base64 or use a uri (remove after debugging)
-      console.log("handleDownload: photoBase64 present:", !!photoBase64, "photoUri:", photoUri);
-      if (!photoSrc) {
-        console.log("handleDownload: no photoSrc will be embedded in PDF");
-      } else if (photoSrc.startsWith("data:")) {
-        console.log("handleDownload: embedding photo as data URL, length:", photoSrc.length);
-      } else {
-        console.log("handleDownload: using photo uri:", photoSrc);
-      }
+  //     // Quick debug: tell whether we will embed base64 or use a uri (remove after debugging)
+  //     console.log("handleDownload: photoBase64 present:", !!photoBase64, "photoUri:", photoUri);
+  //     if (!photoSrc) {
+  //       console.log("handleDownload: no photoSrc will be embedded in PDF");
+  //     } else if (photoSrc.startsWith("data:")) {
+  //       console.log("handleDownload: embedding photo as data URL, length:", photoSrc.length);
+  //     } else {
+  //       console.log("handleDownload: using photo uri:", photoSrc);
+  //     }
 
-      const html = `
-        <!doctype html>
-        <html>
-          <head>
-            <meta charset="utf-8"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <style>
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              @page { size: A4; margin: 0; }
-              @media print { body { margin: 0; padding: 0; } }
-              body { 
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-                background: #fff;
-                width: 210mm;
-                height: 297mm;
-                margin: 0;
-                padding: 0;
-              }
-              .card { 
-                width: 100%;
-                height: 100%;
-                background: #fff; 
-                padding: 20mm;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-              }
-              .header { text-align: center; color: #2e7d32; margin-bottom: 15mm; }
-              .logo { margin-bottom: 8mm; }
-              .logo img { height: 25mm; object-fit: contain; }
-              .title { font-size: 24px; font-weight: 700; margin-bottom: 3mm; }
-              .subtitle { color: #666; font-size: 13px; margin-bottom: 10mm; }
-              .row { display: flex; gap: 15mm; }
-              .left { flex-shrink: 1; }
-              .photo { width: 50mm; height: 40mm;  object-fit: cover; border: 1px solid #ddd; }
-              .right { flex: 1; }
-              .info { 
-                margin-bottom: 5mm; 
-                color: #222; 
-                font-size: 12px;
-                display: flex;
-                gap: 3mm; /* increased by 25% */
-                align-items: center;
-              }
-              .label { color: #333; font-weight: 700; width: 20mm; flex-shrink: 0; } /* labels reduced by 75% */
-              .value { color: #000; flex: 1; }
-              .footer { 
-                margin-top: auto; 
-                padding-top: 10mm;
-                text-align: center; 
-                color: #999; 
-                font-size: 10px;
-                border-top: 1px solid #eee;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <div class="header">
-                ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
+  //     const html = `
+  //       <!doctype html>
+  //       <html>
+  //         <head>
+  //           <meta charset="utf-8"/>
+  //           <meta name="viewport" content="width=device-width, initial-scale=1" />
+  //           <style>
+  //             * { margin: 0; padding: 0; box-sizing: border-box; }
+  //             @page { size: A4; margin: 0; }
+  //             @media print { body { margin: 0; padding: 0; } }
+  //             body { 
+  //               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+  //               background: #fff;
+  //               width: 210mm;
+  //               height: 297mm;
+  //               margin: 0;
+  //               padding: 0;
+  //             }
+  //             .card { 
+  //               width: 100%;
+  //               height: 100%;
+  //               background: #fff; 
+  //               padding: 20mm;
+  //               box-sizing: border-box;
+  //               display: flex;
+  //               flex-direction: column;
+  //             }
+  //             .header { text-align: center; color: #2e7d32; margin-bottom: 15mm; }
+  //             .logo { margin-bottom: 8mm; }
+  //             .logo img { height: 25mm; object-fit: contain; }
+  //             .title { font-size: 24px; font-weight: 700; margin-bottom: 3mm; }
+  //             .subtitle { color: #666; font-size: 13px; margin-bottom: 10mm; }
+  //             .row { display: flex; gap: 15mm; }
+  //             .left { flex-shrink: 1; }
+  //             .photo { width: 50mm; height: 40mm;  object-fit: cover; border: 1px solid #ddd; }
+  //             .right { flex: 1; }
+  //             .info { 
+  //               margin-bottom: 5mm; 
+  //               color: #222; 
+  //               font-size: 12px;
+  //               display: flex;
+  //               gap: 3mm; /* increased by 25% */
+  //               align-items: center;
+  //             }
+  //             .label { color: #333; font-weight: 700; width: 20mm; flex-shrink: 0; } /* labels reduced by 75% */
+  //             .value { color: #000; flex: 1; }
+  //             .footer { 
+  //               margin-top: auto; 
+  //               padding-top: 10mm;
+  //               text-align: center; 
+  //               color: #999; 
+  //               font-size: 10px;
+  //               border-top: 1px solid #eee;
+  //             }
+  //           </style>
+  //         </head>
+  //         <body>
+  //           <div class="card">
+  //             <div class="header">
+  //               ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
                 
-                <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
-                <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
-              </div>
+  //               <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
+  //               <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
+  //             </div>
 
-              <div class="row">
-                <div class="left">
-                  ${photoSrc ? `<img src="${photoSrc}" class="photo" />` : `<div style="width:60mm;height:70mm; background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">No Photo</div>`}
-                </div>
+  //             <div class="row">
+  //               <div class="left">
+  //                 ${photoSrc ? `<img src="${photoSrc}" class="photo" />` : `<div style="width:60mm;height:70mm; background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">No Photo</div>`}
+  //               </div>
 
-                <div class="right">
-                  <div class="info"><span class="label font-bold">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
+  //               <div class="right">
+  //                 <div class="info"><span class="label font-bold">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
                   
-                  <div class="info"><span class="label">Phone:</span> <span class="value">${escapeHtml(cert.phone)}</span></div>
-                  <div class="info"><span class="label">Gender:</span> <span class="value">${escapeHtml(cert.gender)}</span></div>
-                  <div class="info"><span class="label">DOB:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
-                  <div class="info"><span class="label">Country:</span> <span class="value">${escapeHtml(cert.country)}</span></div>
-                  <div class="info"><span class="label">City:</span> <span class="value">${escapeHtml(cert.city)}</span></div>
-                  <div class="info"><span class="label">Address:</span> <span class="value">${escapeHtml(cert.address)}</span></div>
-                  <div class="info"><span class="label">National ID:</span> <span class="value">${escapeHtml(cert.nationalId)}</span></div>
-                  <div class="info" style="margin-top: 8mm; padding-top: 8mm; border-top: 1px solid #ddd;"><span class="label">Agent ID:</span> <span class="value">${escapeHtml(cert.agentId)}</span></div>
-                  <div class="info"><span class="label">Agent:</span> <span class="value">${escapeHtml(cert.agentName)}</span></div>
-                </div>
+  //                 <div class="info"><span class="label">Phone:</span> <span class="value">${escapeHtml(cert.phone)}</span></div>
+  //                 <div class="info"><span class="label">Gender:</span> <span class="value">${escapeHtml(cert.gender)}</span></div>
+  //                 <div class="info"><span class="label">DOB:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
+  //                 <div class="info"><span class="label">Country:</span> <span class="value">${escapeHtml(cert.country)}</span></div>
+  //                 <div class="info"><span class="label">City:</span> <span class="value">${escapeHtml(cert.city)}</span></div>
+  //                 <div class="info"><span class="label">Address:</span> <span class="value">${escapeHtml(cert.address)}</span></div>
+  //                 <div class="info"><span class="label">National ID:</span> <span class="value">${escapeHtml(cert.nationalId)}</span></div>
+  //                 <div class="info" style="margin-top: 8mm; padding-top: 8mm; border-top: 1px solid #ddd;"><span class="label">Agent ID:</span> <span class="value">${escapeHtml(cert.agentId)}</span></div>
+  //                 <div class="info"><span class="label">Agent:</span> <span class="value">${escapeHtml(cert.agentName)}</span></div>
+  //               </div>
                 
-              </div>
-              <div style="margin-top: 15mm; padding: 10mm; font-size: 9px; color: #555; line-height: 1.5; border-top: 1px solid #ddd; margin-left: 20mm; margin-right: 20mm;">
-                <p style="margin: 0 0 8mm 0;">
-                  On ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}, ${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)} expressly consented, via the Halisi platform, to the collection, transfer, and processing of both personal data and registered livestock information, specially for the purposes of credit and insurance applications. Data was collected by agent ${escapeHtml(cert.agentName)}.
-                </p>
-                <p style="margin: 0 0 8mm 0;">
-                  Document generated by Halisi on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}, by agent ${escapeHtml(cert.agentName)}.
-                </p>
-                <p style="margin: 0;">
-                  For more information, please contact info@halisi.ai or visit www.halisi.ai
-                </p>
-              </div>
-              </div>
+  //             </div>
+  //             <div style="margin-top: 15mm; padding: 10mm; font-size: 9px; color: #555; line-height: 1.5; border-top: 1px solid #ddd; margin-left: 20mm; margin-right: 20mm;">
+  //               <p style="margin: 0 0 8mm 0;">
+  //                 On ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}, ${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)} expressly consented, via the Halisi platform, to the collection, transfer, and processing of both personal data and registered livestock information, specially for the purposes of credit and insurance applications. Data was collected by agent ${escapeHtml(cert.agentName)}.
+  //               </p>
+  //               <p style="margin: 0 0 8mm 0;">
+  //                 Document generated by Halisi on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}, by agent ${escapeHtml(cert.agentName)}.
+  //               </p>
+  //               <p style="margin: 0;">
+  //                 For more information, please contact info@halisi.ai or visit www.halisi.ai
+  //               </p>
+  //             </div>
+  //             </div>
 
 
-          </body>
-        </html>
-      `;
+  //         </body>
+  //       </html>
+  //     `;
 
-      const filename = `Farmer_Certificate_${sanitizeFileName(firstName)}_${sanitizeFileName(lastName)}.pdf`;
+  //     const filename = `Farmer_Certificate_${sanitizeFileName(firstName)}_${sanitizeFileName(lastName)}.pdf`;
 
-      // Web: use base64 and trigger browser download
-      if (Platform.OS === "web") {
-        console.log("handleDownload: web platform detected");
-        const webFile = await Print.printToFileAsync({ html, base64: true });
-        console.log("handleDownload: printToFileAsync returned on web", webFile?.base64 ? "with base64" : "without base64");
-        if (webFile.base64) {
-          console.log("handleDownload: creating download link");
-          const link = document.createElement("a");
-          link.href = `data:application/pdf;base64,${webFile.base64}`;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          Alert.alert("Success", "Certificate downloaded!");
-          return;
-        }
-        Alert.alert("PDF generated", "PDF created but cannot be saved on this platform.");
-        return;
-      }
+  //     // Web: use base64 and trigger browser download
+  //     if (Platform.OS === "web") {
+  //       console.log("handleDownload: web platform detected");
+  //       const webFile = await Print.printToFileAsync({ html, base64: true });
+  //       console.log("handleDownload: printToFileAsync returned on web", webFile?.base64 ? "with base64" : "without base64");
+  //       if (webFile.base64) {
+  //         console.log("handleDownload: creating download link");
+  //         const link = document.createElement("a");
+  //         link.href = `data:application/pdf;base64,${webFile.base64}`;
+  //         link.download = filename;
+  //         document.body.appendChild(link);
+  //         link.click();
+  //         link.remove();
+  //         Alert.alert("Success", "Certificate downloaded!");
+  //         return;
+  //       }
+  //       Alert.alert("PDF generated", "PDF created but cannot be saved on this platform.");
+  //       return;
+  //     }
 
-      // Native: generate temp file uri
-      console.log("handleDownload: native platform detected, calling printToFileAsync");
-      let file: any = null;
-      try {
-        file = await Print.printToFileAsync({ html, base64: false });
-        console.log("handleDownload: printToFileAsync succeeded, file uri:", file?.uri);
-      } catch (printErr) {
-        console.warn("printToFileAsync failed on first attempt:", printErr);
-        // Retry without images (some renderers fail when images are too large/corrupt)
-        console.log("handleDownload: retrying printToFileAsync without images");
-        const strippedHtml = html
-          .replace(/<img[^>]*>/g, "")
-          .replace(/<div[^>]*class=\"logo-img\"[^>]*>[\s\S]*?<\/div>/g, "");
-        try {
-          file = await Print.printToFileAsync({ html: strippedHtml, base64: false });
-          console.log("handleDownload: retry succeeded, file uri:", file?.uri);
-        } catch (secondErr) {
-          console.error("printToFileAsync failed again after stripping images:", secondErr);
-          throw printErr; // rethrow original to be handled by outer catch
-        }
-      }
+  //     // Native: generate temp file uri
+  //     console.log("handleDownload: native platform detected, calling printToFileAsync");
+  //     let file: any = null;
+  //     try {
+  //       file = await Print.printToFileAsync({ html, base64: false });
+  //       console.log("handleDownload: printToFileAsync succeeded, file uri:", file?.uri);
+  //     } catch (printErr) {
+  //       console.warn("printToFileAsync failed on first attempt:", printErr);
+  //       // Retry without images (some renderers fail when images are too large/corrupt)
+  //       console.log("handleDownload: retrying printToFileAsync without images");
+  //       const strippedHtml = html
+  //         .replace(/<img[^>]*>/g, "")
+  //         .replace(/<div[^>]*class=\"logo-img\"[^>]*>[\s\S]*?<\/div>/g, "");
+  //       try {
+  //         file = await Print.printToFileAsync({ html: strippedHtml, base64: false });
+  //         console.log("handleDownload: retry succeeded, file uri:", file?.uri);
+  //       } catch (secondErr) {
+  //         console.error("printToFileAsync failed again after stripping images:", secondErr);
+  //         throw printErr; // rethrow original to be handled by outer catch
+  //       }
+  //     }
 
-      // Validate we got a file URI
-      if (!file?.uri) {
-        console.error("handleDownload: ERROR - file object exists but uri is missing or falsy");
-        throw new Error("PDF generated but no file URI returned");
-      }
+  //     // Validate we got a file URI
+  //     if (!file?.uri) {
+  //       console.error("handleDownload: ERROR - file object exists but uri is missing or falsy");
+  //       throw new Error("PDF generated but no file URI returned");
+  //     }
 
-      // Try to share the generated PDF (works on native devices). If sharing unavailable, show temp uri.
-      console.log("handleDownload: checking if Sharing is available");
-      if (await Sharing.isAvailableAsync()) {
-        console.log("handleDownload: Sharing available, calling shareAsync with uri:", file.uri);
-        await Sharing.shareAsync(file.uri);
-        console.log("handleDownload: shareAsync completed successfully");
-      } else {
-        console.log("handleDownload: Sharing not available, showing alert");
-        Alert.alert("PDF generated", `PDF created. Temp uri: ${file.uri}`);
-      }
-    } catch (error) {
-      console.error("handleDownload: OUTER CATCH - Error generating certificate PDF:", error);
-      if (error instanceof Error) {
-        console.error("  Error message:", error.message);
-        console.error("  Stack:", error.stack);
-      }
-      Alert.alert("Error", "Failed to generate certificate PDF. See console for details.");
-    }
-  };
+  //     // Try to share the generated PDF (works on native devices). If sharing unavailable, show temp uri.
+  //     console.log("handleDownload: checking if Sharing is available");
+  //     if (await Sharing.isAvailableAsync()) {
+  //       console.log("handleDownload: Sharing available, calling shareAsync with uri:", file.uri);
+  //       await Sharing.shareAsync(file.uri);
+  //       console.log("handleDownload: shareAsync completed successfully");
+  //     } else {
+  //       console.log("handleDownload: Sharing not available, showing alert");
+  //       Alert.alert("PDF generated", `PDF created. Temp uri: ${file.uri}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("handleDownload: OUTER CATCH - Error generating certificate PDF:", error);
+  //     if (error instanceof Error) {
+  //       console.error("  Error message:", error.message);
+  //       console.error("  Stack:", error.stack);
+  //     }
+  //     Alert.alert("Error", "Failed to generate certificate PDF. See console for details.");
+  //   }
+  // };
 
   // small helpers for safety
   function escapeHtml(input: string | undefined | null) {
@@ -518,6 +513,15 @@ const validateStep = () => {
   setNationalId={setNationalId}
   country={country}
   setCountry={setCountry}
+  permission={permission}
+  requestPermission={requestPermission}
+  photoUri={photoUri}
+  setPhotoUri={setPhotoUri}
+  cameraRef={cameraRef}
+  facing={facing}
+  toggleCameraFacing={toggleCameraFacing}
+  setPhotoBase64={setPhotoBase64}
+  species="farmer"
   errors={errors}          // <-- REQUIRED
 />
 )
@@ -630,29 +634,8 @@ const validateStep = () => {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
           <Text style={styles.header}>Registration</Text>
 
-          <View style={styles.stepIndicatorContainer}>
-            {[1, 2, 3, 4,5,6].map((num) => (
-              <View key={num} style={styles.stepItem}>
-                <TouchableOpacity onPress={() => setStep(num)}>
-                  <View
-                    style={[
-                      styles.stepCircle,
-                      step === num && styles.activeStepCircle,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.stepText,
-                        step === num && styles.activeStepText,
-                      ]}
-                    >
-                      {num}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
+          {/* Step Indicator */}
+          <MultiStepComponent setStep={setStep} step={step}/>
 
           {renderStepContent()}
 

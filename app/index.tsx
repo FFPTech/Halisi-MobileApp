@@ -88,7 +88,7 @@ const router = useRouter();
 //5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
 
 //Physical Device SHA-1 fingerprint:
-//
+// 87:C9:44:73:0F:0D:5E:B5:BC:E6:72:CD:24:C6:B5:07:C1:D2:ED:5F
 const styles = StyleSheet.create({ 
 
   wrapper:{
