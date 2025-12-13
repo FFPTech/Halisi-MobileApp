@@ -74,10 +74,13 @@ export default function StepPersonalInfo({
           label="National ID"
           value={nationalId}
           onChangeText={setNationalId}
-          error={errors.nationalId}
-        />
+          error={nationalId.length === 0
+            ? "National ID is required"
+            : nationalId.length > 20
+            ? "National ID cannot exceed 20 digits"
+            : undefined}
 
-        {/* -------------------- EMAIL -------------------- */}
+        />
         
 
         {/* -------------------- COUNTRY -------------------- */}
@@ -89,10 +92,8 @@ export default function StepPersonalInfo({
             { label: "Kenya", value: "Kenya" },
             { label: "Congo", value: "Congo" },
           ]}
+        error={!country ? "Country is required" : undefined}
         />
-        {errors.country && (
-          <Text style={{ color: "red" }}>{errors.country}</Text>
-        )}
 
         {/* -------------------- CITY -------------------- */}
         {country ? (
@@ -171,6 +172,7 @@ export default function StepPersonalInfo({
           value={experience}
           onChangeText={setExperience}
           error={errors.experience}
+          numbersOnly
         />
 
         {/* -------------------- AGE CATEGORY -------------------- */}

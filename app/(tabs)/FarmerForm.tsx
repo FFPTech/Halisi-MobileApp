@@ -193,13 +193,12 @@ const validateStep = () => {
     case 1:
       if (!nationalId?.trim()) newErrors.nationalId = "National ID is required";
       if (!country?.trim()) newErrors.country = "Country is required";
-      break;
-
-    case 2:
       if (!photoUri) newErrors.photoUri = "Profile photo is required";
       break;
 
-    case 3:
+    
+
+    case 2:
       if (!firstName?.trim()) newErrors.firstName = "First Name is required";
       if (!lastName?.trim()) newErrors.lastName = "Last Name is required";
 
@@ -525,24 +524,9 @@ const validateStep = () => {
   errors={errors}          // <-- REQUIRED
 />
 )
-      case 2:
-        return (
+    
 
-<StepCamera
-  permission={permission}
-  requestPermission={requestPermission}
-  photoUri={photoUri}
-  setPhotoUri={setPhotoUri}
-  cameraRef={cameraRef}
-  facing={facing}
-  toggleCameraFacing={toggleCameraFacing}
-  setPhotoBase64={setPhotoBase64}
-  species="farmer"
-  errors={errors}      // <-- REQUIRED
-/>
-        );
-
-    case 3:
+    case 2:
       return (
 <StepPersonalInfo
       firstName={firstName}

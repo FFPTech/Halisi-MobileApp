@@ -1,12 +1,44 @@
 import React from "react";
-import { StyleSheet, Text, TextInput, TextInputProps, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
 
 interface InputFieldProps extends TextInputProps {
   label: string;
-  error?: string; // <-- Pass error message as a prop
+  error?: string;
+  numbersOnly?: boolean;   // Allow only numbers
+  maxNumbers?: number;     // Max number of digits (e.g. 20 for National ID)
 }
 
-export default function InputField({ label, style, error, ...props }: InputFieldProps) {
+export default function InputField({
+  label,
+  style,
+  error,
+  numbersOnly = false,
+  maxNumbers,
+  onChangeText,
+  ...props
+}: InputFieldProps) {
+  const handleChangeText = (text: string) => {
+    let value = text;
+
+    // ✅ Numbers-only sanitization
+    if (numbersOnly) {
+      value = value.replace(/[^0-9]/g, "");
+
+      // ✅ Enforce max digit length
+      if (maxNumbers && value.length > maxNumbers) {
+        value = value.slice(0, maxNumbers);
+      }
+    }
+
+    onChangeText?.(value);
+  };
+
   return (
     <View style={styles.container}>
       {/* Label */}
@@ -15,15 +47,20 @@ export default function InputField({ label, style, error, ...props }: InputField
       {/* Input */}
       <TextInput
         {...props}
+        value={props.value}
+        keyboardType={numbersOnly ? "number-pad" : props.keyboardType}
+        onChangeText={handleChangeText}
+        autoCorrect={false}
+        autoCapitalize="none"
         style={[
           styles.input,
           style,
-          error ? styles.inputError : {}, // Highlight red if error exists
+          error ? styles.inputError : null,
         ]}
         placeholderTextColor="#888"
       />
 
-      {/* Error message */}
+      {/* Error Message */}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -34,7 +71,6 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 24,
     marginVertical: 6,
-    justifyContent: "center",
   },
   label: {
     fontSize: 16,
@@ -50,6 +86,7 @@ const styles = StyleSheet.create({
     padding: 12,
     width: "100%",
     backgroundColor: "#fff",
+    fontSize: 16,
   },
   inputError: {
     borderColor: "red",

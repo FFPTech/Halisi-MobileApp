@@ -4,6 +4,7 @@ import * as FaceDetector from "expo-face-detector";
 import * as ImageManipulator from "expo-image-manipulator";
 import React, { useState } from "react";
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import CommonButton from "./CommonButtonComponent";
 import FormStepWrapper from "./FormStepWrapper";
 
 
@@ -79,9 +80,8 @@ console.log(photo.uri);
     return (
       <FormStepWrapper title="Step 2: Capture User Photo">
         <Text>We need your permission to use the camera.</Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionText}>Grant Permission</Text>
-        </TouchableOpacity>
+
+        <CommonButton title="Grant Permission" style={styles.permissionButton} onPress={requestPermission}/>
       </FormStepWrapper>
     );
   }
@@ -138,6 +138,10 @@ console.log(photo.uri);
           </View>
         </>
       )}
+      <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >
+
+    <CommonButton title="Enroll" onPress={()=>{}}/>
+      </View>
     </FormStepWrapper>
   );
 }

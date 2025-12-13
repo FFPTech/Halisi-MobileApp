@@ -19,10 +19,10 @@ interface Option {
 interface DropdownProps {
   label?: string;
   options: Option[];
-  selectedValue: string;
+  selectedValue?: string; // ✅ allow empty / undefined
   onValueChange: (value: string) => void;
   placeholder?: string;
-  error?: string; // <-- add error prop
+  error?: string;
 }
 
 export default function Dropdown({
@@ -40,35 +40,43 @@ export default function Dropdown({
     setVisible(false);
   };
 
+  // ✅ safely resolve selected label
+  const selectedLabel =
+    selectedValue && options.find(o => o.value === selectedValue)?.label;
+
   return (
     <View style={{ marginBottom: 8, width: "100%", paddingHorizontal: 20 }}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      {/* Trigger */}
+      {/* Dropdown Trigger */}
       <TouchableOpacity
         style={[
           styles.dropdownButton,
-          error ? styles.dropdownError : null, // highlight red if error
+          error ? styles.dropdownError : null,
         ]}
         onPress={() => setVisible(true)}
+        activeOpacity={0.8}
       >
-        <Text style={{ color: selectedValue ? "#000" : "#999" }}>
-          {options.find((o) => o.value === selectedValue)?.label || placeholder}
+        <Text style={{ color: selectedLabel ? "#000" : "#999" }}>
+          {selectedLabel || placeholder}
         </Text>
         <Ionicons name="chevron-down" size={18} color="#666" />
       </TouchableOpacity>
 
-      {/* Error message */}
+      {/* Error Message */}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Modal */}
+      {/* Dropdown Modal */}
       <Modal
         visible={visible}
         transparent
         animationType="fade"
         onRequestClose={() => setVisible(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setVisible(false)}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setVisible(false)}
+        >
           <View style={styles.modalContainer}>
             <FlatList
               data={options}
@@ -141,8 +149,6 @@ const styles = StyleSheet.create({
   option: {
     paddingVertical: 12,
     paddingHorizontal: 15,
-    flexDirection: "row",
-    alignItems: "center",
   },
   optionActive: {
     backgroundColor: "#E8F5E9",

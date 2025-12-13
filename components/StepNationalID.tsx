@@ -69,6 +69,7 @@ export default function StepNationalId({
             { label: "Kenya", value: "Kenya" },
             { label: "Congo", value: "Congo" }
           ]}
+          error={!country ? "Country is required" : undefined}
           // <-- show error under dropdown
         />
       </View>
@@ -79,10 +80,17 @@ export default function StepNationalId({
           value={nationalId}
           onChangeText={setNationalId}
           placeholder="Enter Farmer NIN"
-          error={errors.nationalId} // <-- show error under input
+          error={
+          nationalId.length === 0
+            ? "National ID is required"
+            : nationalId.length > 20
+            ? "National ID cannot exceed 20 digits"
+            : undefined
+        }
+          numbersOnly// <-- show error under input
         />
       </View>
-      <View style={{marginTop:30}} >
+      <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >
 
       <CommonButton onPress={()=>setShowCameraComponent(true)} title="Submit"/>
       </View>
