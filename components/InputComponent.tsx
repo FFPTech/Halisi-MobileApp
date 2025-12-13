@@ -11,7 +11,8 @@ interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
   numbersOnly?: boolean;   // Allow only numbers
-  maxNumbers?: number;     // Max number of digits (e.g. 20 for National ID)
+  maxNumbers?: number; 
+   // Max number of digits (e.g. 20 for National ID)
 }
 
 export default function InputField({
@@ -34,6 +35,7 @@ export default function InputField({
       if (maxNumbers && value.length > maxNumbers) {
         value = value.slice(0, maxNumbers);
       }
+      
     }
 
     onChangeText?.(value);

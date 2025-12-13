@@ -1,15 +1,14 @@
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
+import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { Image, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { users } from "../data/user";
-import { loadUsersFromStorage, saveUsersToStorage } from "../storage/storeUsers";
-
-
-import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
-import { useRouter } from "expo-router";
 import CommonButton from "../components/CommonButtonComponent";
 import InputComponent from "../components/InputComponent";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { users } from "../data/user";
 import { useUser } from "../Hooks/useUserGlobal";
+import { loadUsersFromStorage, saveUsersToStorage } from "../storage/storeUsers";
 
 
 
@@ -18,7 +17,7 @@ import { useUser } from "../Hooks/useUserGlobal";
 
 export default function index() {
 
-const {handleSignIn,email,setEmail,password,setPassword,user,setUser} = useUser();
+const {handleSignIn,email,setEmail,password,setPassword,loading} = useUser();
   
 const router = useRouter();
 
@@ -44,10 +43,7 @@ const router = useRouter();
   }, []);
 
   //  Handle Login
-  
-
-
-
+if(loading){return <LoadingSpinner size="large" color=" #2e7d32" />}
   
   return (
     <SafeAreaView style={styles.wrapper}>  

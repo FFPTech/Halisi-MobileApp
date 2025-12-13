@@ -1,12 +1,16 @@
 // components/steps/StepNationalId.tsx
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
+import { useUser } from "../Hooks/useUserGlobal";
 import CommonButton from "./CommonButtonComponent";
 import Dropdown from "./DropDown";
 import FormStepWrapper from "./FormStepWrapper";
 import InputField from "./InputComponent";
+import LoadingSpinner from "./LoadingSpinner";
 import StepCamera from "./StepCamera";
 import ToggleButton from "./ToggleComponent";
+
+
 
 interface StepNationalIdProps {
   isEnabled: boolean;
@@ -50,6 +54,50 @@ export default function StepNationalId({
   errors = {}
 }: StepNationalIdProps) {
   const [showcameraComponent, setShowCameraComponent] = useState(false);
+  const {verify_nin,loadingVerifyNiN,query_db, setLoadingVerifyNiN} = useUser();
+  const [useIprsVerification, setUseIprsVerification] = useState(false)
+
+
+// const handleSubmit = () => {
+//     if (isValidInput && farmerNationalNumber !== '') {
+//       setSuccessfulValidation(true);
+//       if (useIprsVerification) {
+//         verify_nin();
+//       } else {
+//         // Skip IPRS verification and go directly to DB query
+//         dispatch({ type: 'SET_FARMER_NATIONAL_NUMBER', payload: farmerNationalNumber });
+//         setApiCallInProgress(true);
+//         query_db(nationalId,country);
+//       }
+//     } else {
+//       setShowValidNINAlert(true);
+//     }
+//   };
+
+
+  const handleSubmit = async()=>{
+    if(nationalId !== ''){
+if(useIprsVerification){
+
+  await verify_nin(nationalId,country);
+}
+else{
+   setLoadingVerifyNiN(true)
+   await query_db(nationalId,country);
+   setLoadingVerifyNiN(false)
+  Alert.alert("Your NIN has been enrolled please Proceed to Registration")
+}
+    }
+    
+    try {
+
+    } catch (error) {
+      console.log("Error verifying NIN: ", error)}}
+
+if(loadingVerifyNiN){
+  return <LoadingSpinner size="large" color="#2e7d32" />
+}
+
   return (
     <>{
       !showcameraComponent ? <FormStepWrapper title="Step 1: Farmer National Identification Number">
@@ -57,7 +105,7 @@ export default function StepNationalId({
         <Text style={{ width: 230, textAlign: "center" }}>
           Use Population Registration System Verification
         </Text>
-        <ToggleButton value={isEnabled} onChange={setIsEnabled} />
+        <ToggleButton value={useIprsVerification} onChange={setUseIprsVerification} />
       </View>
 
       <View style={{ marginTop: 20 }}>
@@ -92,7 +140,7 @@ export default function StepNationalId({
       </View>
       <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >
 
-      <CommonButton onPress={()=>setShowCameraComponent(true)} title="Submit"/>
+      <CommonButton onPress={handleSubmit} title="Submit"/>
       </View>
     </FormStepWrapper> :<StepCamera
       permission={permission}

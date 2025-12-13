@@ -1,9 +1,10 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import axios from "axios";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { createContext, useState } from "react";
 import { Alert } from "react-native";
-import { handleLoginAPI } from "../Hooks/Api/Auth/HandleLogin";
+import { getCompanyData, handleLoginAPI } from "../Hooks/Api/Auth/HandleLogin";
 
 
 // ---------------------------
@@ -41,7 +42,15 @@ const [user, setUser] = useState({
   user_id: "",
   image: ""
 });
-  const [loading, setLoading] = useState(true);
+
+const [companyData, setCompanyData] = useState({
+  email: "",
+  company_logo:"",
+  compamy_email_id:"",
+  linked_insurance_companies:[],
+})
+  const [loading, setLoading] = useState(false);
+  const [loadingVerifyNiN,setLoadingVerifyNiN] = useState(false)
 
   
 
@@ -71,6 +80,8 @@ const [user, setUser] = useState({
   // ---------------------------
   const [signingIn, setSigningIn] = useState(false);
 
+
+  //Handle Google Sign-In
   const handleSignIn = async () => {
     if (signingIn) return;
     setSigningIn(true);
@@ -79,6 +90,7 @@ const [user, setUser] = useState({
       await GoogleSignin.hasPlayServices();
       const result = await GoogleSignin.signIn();
 
+      setLoading(true)
       const profile = result.data.user;
       const userData = {
         email: profile.email,
@@ -87,7 +99,6 @@ const [user, setUser] = useState({
         role: "field_officer",
         image: profile.photo ?? "",
       };
-
       const userDetails = await handleLoginAPI(userData.email);  // Call the login API
       if (!userDetails.status) {
         Alert.alert("Login Failed", "Your account is not approved.");
@@ -107,26 +118,141 @@ const [user, setUser] = useState({
         user_id: userDetails.user_id,
         image: userData.image
       })
-      console.log(userDetails);
+      // console.log(userDetails);
       
      // setUser(userData);
 
       Alert.alert("Welcome!", profile.name);
       router.replace("/FillForm");
+      // console.log(userDetails.institutions[0],userDetails.user_id,userDetails.company_id);
+      
+      fetchCompanyData(userDetails.institutions[0],userDetails.user_id,userDetails.company_id);
+      setLoading(false)
     } catch (e) {
       console.log("Google Sign-In error:", e);
       Alert.alert("Login error", "Google login failed");
+      setLoading(false)
     } finally {
       setSigningIn(false);
     }
   };
+
+  //Get company data function
+const fetchCompanyData = async(institution:string,agent_id:string,instituition_id:string)=>{
+  try {
+    const companyData = await getCompanyData(institution,agent_id,instituition_id); 
+  setCompanyData({
+    email:companyData.company_email_id,
+    company_logo:companyData.company_logo,
+    compamy_email_id:companyData.compamy_email_id,
+    linked_insurance_companies:companyData.linked_insurance_companies,
+  })
+  //image is in base64 format dont forget to decode it when displaying
+
+  // console.log(companyData);
+  
+  } catch (error) {
+    console.log("Error fetching company data:", error);
+  }}
+
+//Get country code function
+const getCountryCode = (country) => {
+    const countryMap = {
+      'Kenya': 'KE',
+      'Democratic Republic of Congo': 'COD',
+      'Belgium': 'BE',
+      'Tanzania': 'TZ',
+      'Zambia': 'ZM',
+      'India': 'IN',
+    };
+    return countryMap[country] || '';
+  };
+
+const verify_nin = async(farmerNationalId,selectedCountry) => {
+    // dispatch({ type: 'SET_FARMER_NATIONAL_NUMBER', payload: farmerNationalNumber });
+    // setApiCallInProgress(true);
+ 
+    const requestData = {
+      id_number: farmerNationalId,
+      id_type: 'national-id',
+      language: 'EN',
+      country: getCountryCode(selectedCountry),
+      env: 'Qua',
+    };
+    console.log(requestData);
+    
+
+    try {
+      setLoadingVerifyNiN(true)
+      const response = await axios.post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/iprsverification", requestData)
+       const res = response.data;
+       console.log(res);
+       
+       //const message = res?.message?.toLowerCase() || "";
+       //const statusFound = res?.data?.status?.toLowerCase() === "found";
+      
+  
+         // If found
+         // setIprsStatus(true);
+         // Extract and dispatch farmer data from IPRS
+        //  const farmerData = {
+        //    firstName: res.data.firstName,
+        //    middleName: res.data.middleName,
+        //    lastName: res.data.lastName,
+        //    country: res.data.country,
+        //    dateOfBirth: res.data.dateOfBirth,
+        //    gender: res.data.gender,
+        //    idNumber: res.data.idNumber,
+        //    idType: res.data.identityType,
+        //    mainAddress: res.data.mainAddress,
+        //    mobileTelephoneNumber: res.data.mobileTelephoneNumber,
+        //  };
+         // dispatch({ type: 'SET_FARMER_DATA', payload: farmerData });
+  
+          const resp = await query_db(farmerNationalId,selectedCountry);
+          setLoadingVerifyNiN(false)
+    } catch (error) {
+      console.log("There was an error",error);
+      setLoadingVerifyNiN(false)
+      
+    }
+ 
+      
+      
+  };
+
+
+  const query_db = async(farmerNationalId,selectedCountry) => {
+    const data = {
+      farmer_national_id: farmerNationalId,
+      agent_id: user.user_id,
+      institution_id:user.company_id,
+      country: getCountryCode(selectedCountry),
+      env: 'Qua',
+    };
+
+    try {
+      
+      const response = await axios
+        .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readfarmernin", data)
+      const responseData = response.data;
+      console.log("Database Response:", responseData);
+      return responseData;  
+    } catch (error) {
+      console.log(error);
+      
+    }
+  };
+
+
+
+//Verify NIN function
 
   
 
   // ---------------------------
   // Load session on startup
   // ---------------------------
- 
 
   return (
     <UserContext.Provider
@@ -136,7 +262,10 @@ const [user, setUser] = useState({
         handleSignIn,
         logout,
         setUser,
-        
+        verify_nin,
+        loadingVerifyNiN,
+        query_db,
+        setLoadingVerifyNiN
       }}
     >
       {children}
