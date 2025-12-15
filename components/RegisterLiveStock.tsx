@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const RegisterAnotherLivestockScreen = ({ navigation }) => {
+export const RegisterAnotherLivestockScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Would you like to register another livestock?</Text>

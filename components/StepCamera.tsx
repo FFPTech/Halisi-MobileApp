@@ -4,6 +4,7 @@ import * as FaceDetector from "expo-face-detector";
 import * as ImageManipulator from "expo-image-manipulator";
 import React, { useState } from "react";
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useUser } from "../Hooks/useUserGlobal";
 import CommonButton from "./CommonButtonComponent";
 import FormStepWrapper from "./FormStepWrapper";
 
@@ -39,13 +40,14 @@ export default function StepCamera({
 }: StepCameraProps) {
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const [faces, setFaces] = useState<FaceDetector.FaceFeature[]>([]);
-
+  const {setRegisterNewLivestock} = useUser()
+  
   // Face detection is handled via the camera's frame processor
   // For now, we'll just track the container size
-const takePictureIfFaceDetected = async () => {
+  const takePictureIfFaceDetected = async () => {
   try {
    
-
+    
     if (cameraRef.current) {
       // Capture a photo (uri)
       const photo = await cameraRef.current.takePictureAsync({ base64: false, quality: 0.9 });
@@ -73,7 +75,12 @@ console.log(photo.uri);
 
 
 
+const handleEnroll = ()=>{
+  if(species === "livestock"){
 
+    setRegisterNewLivestock(true)
+  }
+}
 
 
   if (!permission.granted) {
@@ -140,7 +147,7 @@ console.log(photo.uri);
       )}
       <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >
 
-    <CommonButton title="Enroll" onPress={()=>{}}/>
+    <CommonButton title="Enroll" onPress={()=>handleEnroll()}/>
       </View>
     </FormStepWrapper>
   );

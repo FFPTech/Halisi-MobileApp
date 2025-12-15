@@ -14,20 +14,19 @@ import {
 
 import { router } from "expo-router";
 import { MultiStepComponent } from "../../components/MultiStep";
+import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
 import StepCamera from "../../components/StepCamera";
-import StepLivestock from "../../components/StepLivestock";
 import StepNationalId from "../../components/StepNationalID";
 import StepOperation from "../../components/StepOperation";
 import StepPersonalInfo from "../../components/StepPersonalInfo";
 import { useUser } from "../../Hooks/useUserGlobal";
-
 
 // bundled logo asset
 const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock } = useUser();
+  const { saveFarmer,saveLivestock,registerNewLivestock } = useUser();
 const cities = {
     Kenya: ["Nairobi", "Mombasa", "Kisumu"],
     Congo: ["Kinshasa", "Goma", "Lubumbashi"]
@@ -495,6 +494,10 @@ const validateStep = () => {
     return input.replace(/[^a-z0-9_\-]/gi, "_");
   }
 
+  if(registerNewLivestock){
+    return <RegisterAnotherLivestockScreen />
+  }
+
   // Step content rendering
   const renderStepContent = () => {
     if (!permission) return <View />;
@@ -570,32 +573,31 @@ const validateStep = () => {
     />
       );
 
-      case 4:
-        const kenyaCities = ["Nairobi", "Mombasa", "Kisumu", "Eldoret", "Nakuru"];
-        const congoCities = ["Kinshasa", "Lubumbashi", "Goma", "Kisangani", "Mbandaka"];
-        const cityOptions =
-          country === "Kenya"
-            ? kenyaCities.map((c) => ({ label: c, value: c }))
-            : country === "Congo"
-            ? congoCities.map((c) => ({ label: c, value: c }))
-            : [];
+      case 3:
+        
 
         return (
          
           <StepOperation
-          nextStep={nextStep}
-      />
-        );
-        case 5:
-          return (
-            <StepLivestock
-              livestocktag={livestockTag}
+          
+           livestocktag={livestockTag}
               setLivestockTag={setLivestockTag}
               errors={errors}
-        />
-          );
+              permission={permission}
+              livestockPhotoUri={livestockPhotoUri}
+              setLivestockPhotoUri={setLivestockPhotoUri}
+              setPhotoBase64s={setPhotoBase64}
+              requestPermission={requestPermission}
+              facing={facing}
+              toggleCameraFacing={toggleCameraFacing}
+              cameraRef={cameraRef}
+              nextStep={nextStep}
 
-      case 6:
+      />
+        );
+        ;
+
+      case 4:
         return (
           <StepCamera
            permission={permission}
@@ -641,20 +643,9 @@ const validateStep = () => {
           return (
             <TouchableOpacity
               style={styles.nextButton}
-              onPress={async () => {
-                if (validateStep()) {
-                  try {
-                    await handleSubmit(); // save farmer
-                    Alert.alert("Success", "Farmer registered successfully!");
-                    setStep(step + 1); // go to next step
-                  } catch (e) {
-                    console.error("Error saving farmer:", e);
-                    Alert.alert("Error", "Failed to save farmer");
-                  }
-                }
-              }}
+              onPress={nextStep}
             >
-              <Text style={styles.buttonText}>Submit</Text>
+              <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
           );
 

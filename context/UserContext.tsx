@@ -51,10 +51,8 @@ const [companyData, setCompanyData] = useState({
 })
   const [loading, setLoading] = useState(false);
   const [loadingVerifyNiN,setLoadingVerifyNiN] = useState(false)
-
-  
-
-
+const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
+const [step, setStep] = useState<number>(1);
  
 
   // ---------------------------
@@ -265,7 +263,10 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
         verify_nin,
         loadingVerifyNiN,
         query_db,
-        setLoadingVerifyNiN
+        setLoadingVerifyNiN,
+        registerNewLivestock,
+        setRegisterNewLivestock, 
+        step,setStep
       }}
     >
       {children}
