@@ -12,7 +12,7 @@ import {
   View
 } from "react-native";
 
-import { router } from "expo-router";
+import axios from "axios";
 import { MultiStepComponent } from "../../components/MultiStep";
 import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
 import StepCamera from "../../components/StepCamera";
@@ -26,13 +26,13 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock,registerNewLivestock } = useUser();
+  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box} = useUser();
 const cities = {
     Kenya: ["Nairobi", "Mombasa", "Kisumu"],
     Congo: ["Kinshasa", "Goma", "Lubumbashi"]
   };
 
-  const [step, setStep] = useState<number>(1);
+  
   const totalSteps = 6;
 const [isEnabled, setIsEnabled] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
@@ -68,7 +68,12 @@ const [annualIncome, setAnnualIncome] = useState();
 const [farmerKRAPin, setFarmerKRApin] = useState("");
 const [livestockPhotoUri, setLivestockPhotoUri] = useState<string | null>(null);
 const [livestockTag, setLivestockTag] = useState("");
-
+const [apiCallInProgress,setApiCallInProgress] =useState(false)
+const [isSubmit, setIsSubmit] = useState(false)
+const [isSuccess,setIsSuccess]=useState(false)
+const [operation,setoperation] = useState("register")
+const base64Header = "data:image/jpeg;base64,";
+// console.log(photoBase64);
 
 
 const handleLivestockSubmit = async () => {
@@ -138,45 +143,45 @@ const handleLivestockSubmit = async () => {
 
 
 //submit form
-  const handleSubmit = async () => {
-    if (!firstName || !lastName || !nationalId || !phone) {
-      Alert.alert("Missing Fields", "Please fill all required fields");
-      return;
-    }
+  // const handleSubmit = async () => {
+  //   if (!firstName || !lastName || !nationalId || !phone) {
+  //     Alert.alert("Missing Fields", "Please fill all required fields");
+  //     return;
+  //   }
 
-    try {
-      await saveFarmer({
-        firstName,
-        lastName,
-        phone,
-        gender,
-        dob,
-        country,
-        city,
+  //   try {
+  //     await saveFarmer({
+  //       firstName,
+  //       lastName,
+  //       phone,
+  //       gender,
+  //       dob,
+  //       country,
+  //       city,
        
-        nationalId,
-        address,
-        verify,
-        monthlyIncome,
-        isMemberCooperative,
-        nameOfCooperative,
-        experience,
-        ageCategory,
-        schooling,
-        accommodation,
-        residentialStatus,
-        tenureWithFinancialInstitution,
-        annualIncome,
-        farmerKRAPin,
-      });
+  //       nationalId,
+  //       address,
+  //       verify,
+  //       monthlyIncome,
+  //       isMemberCooperative,
+  //       nameOfCooperative,
+  //       experience,
+  //       ageCategory,
+  //       schooling,
+  //       accommodation,
+  //       residentialStatus,
+  //       tenureWithFinancialInstitution,
+  //       annualIncome,
+  //       farmerKRAPin,
+  //     });
 
-      Alert.alert("Success", "Farmer registered successfully");
-      // Optionally clear form
-    } catch (e) {
-      console.log(e);
-      Alert.alert("Error", "Failed to save farmer");
-    }
-  };
+  //     Alert.alert("Success", "Farmer registered successfully");
+  //     // Optionally clear form
+  //   } catch (e) {
+  //     console.log(e);
+  //     Alert.alert("Error", "Failed to save farmer");
+  //   }
+  // };
   // Camera toggle
   const toggleCameraFacing = () =>
     setFacing((current) => (current === "back" ? "front" : "back"));
@@ -231,7 +236,146 @@ const validateStep = () => {
   const nextStep = () => {
     if (validateStep()) setStep(step + 1);
   };
-  const prevStep = () => setStep(step - 1);
+  const handleSubmit = () => {
+        setApiCallInProgress(true);
+        
+        setIsSubmit(true);
+        console.log("Hello");
+        // console.log("No photo",photoBase64);
+        if (!photoBase64) {
+          console.log("No photo",photoBase64);
+          // photoBase64
+          
+          Alert.alert("Please take a picture")
+          setIsSuccess(false);
+          // Dispatch action to save res object
+        }
+        else {
+            var rect = [parseInt(box[0]),parseInt(box[1]),parseInt(box[2]),parseInt(box[3])];
+
+            if (operation !== "register"){
+                let t0 = performance.now();
+                let data =
+                    {
+                    agent_id: agent.agent_id,
+                    institution_id:agent.institution_id,
+                    image: photoBase64,
+                    signature: farmerData.signature,
+                    id : farmerData.id,
+                    rect: rect,
+                    moveable_rect: rect
+                };
+                console.log("plese let me see", data);
+                
+                axios
+                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifyfarmer", data)
+                    .then((data) => {
+                        let humanVerifyAPIResponse = data.data;
+                        // calling performance metrics API function
+                        callPerformanceMetrics("verify", humanVerifyAPIResponse);
+                        setApiCallInProgress(false);
+                        // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
+                        // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
+                        // let t1 = performance.now();
+                        // let total = parseInt(t1 - t0);
+                        // setTotalEnrollTimeFarmer(total);
+                        if (humanVerifyAPIResponse.match === false) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess( false);
+                            // setShowFaceMatchNo(true);
+                        }
+                        else if (humanVerifyAPIResponse.match === true) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess(true);
+                            // setShowFaceMatchOk(true);
+                        }
+                        else {
+                            setApiCallInProgress(false);
+                            setIsSuccess(false);
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            // setFaceNotDetected(true);
+                        }
+                        })
+                    .catch((err) => {
+                    if (err.response.status === 501 || err.response.status === 404)
+                    setApiCallInProgress(false);
+                    setIsSuccess(false);
+                    // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                    // setFaceNotDetected(true);
+                    });
+                }
+              else{
+                let t0 = performance.now();
+                
+                let data =
+                    {image: photoBase64,
+                    agent_id: agent.agent_id,
+                    institution_id:agent.company_id,
+                    rect: box,
+                    request_source: 'Halisi_V1.0',
+                    moveable_rect: box};
+                    console.log(data);
+                axios
+                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer", data)
+                    .then((data) => {
+                        let humanEnrollAPIResponse = data.data;
+                        console.log("data", data.data);
+                        
+                        callPerformanceMetrics("enroll", humanEnrollAPIResponse);
+                        // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
+                        // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
+                        // let t1 = performance.now();
+                        // let total = parseInt(t1 - t0);
+                        // setTotalEnrollTimeFarmer(total);
+                        if (humanEnrollAPIResponse.dedup_result === true) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess(false);
+                            // setShowDuplicateAlert(true);
+                        } else {
+                            if(humanEnrollAPIResponse.signature === "None" || humanEnrollAPIResponse.signature === null || humanEnrollAPIResponse.signature === undefined){
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            setApiCallInProgress(false);
+                            setIsSuccess(false);
+                            // setFaceNotDetected(true);
+                            }
+                            else{
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            writeToRecord(humanEnrollAPIResponse);
+                            setIsSuccess(true);
+                            Alert.alert("Enrolled successfully")
+                            // setShowEnrolledMessage(true);
+                            }
+                        }
+                      }
+                    )
+                    .catch((err) => {
+                      if (err.response.status === 501 || err.response.status === 404)
+                        setIsSuccess(false);
+                        setApiCallInProgress(false);
+                        console.log("There was an error",err);
+                        
+                        //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                        // setFaceNotDetected(true);
+                    });
+                  }
+              }
+        };
+        const prevStep = () => setStep(step - 1);
+
+
+
+
+
+
+
 
   // Save data to AsyncStorage
  
@@ -524,6 +668,7 @@ const validateStep = () => {
   toggleCameraFacing={toggleCameraFacing}
   setPhotoBase64={setPhotoBase64}
   species="farmer"
+  onpress ={handleSubmit}
   errors={errors}          // <-- REQUIRED
 />
 )
@@ -665,7 +810,7 @@ const validateStep = () => {
                   try {
                     await handleLivestockSubmit(); // submit livestock
                     Alert.alert("Success", "Farmer and livestock registration complete!");
-                    router.replace("/RegisterLiveStock"); // redirect after submission
+                    // router.replace("/RegisterLiveStock"); // redirect after submission
                   } catch (e) {
                     console.error("Error saving livestock:", e);
                     Alert.alert("Error", "Failed to save livestock");

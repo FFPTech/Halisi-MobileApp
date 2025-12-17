@@ -29,7 +29,7 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
 
   const db = useSQLiteContext();
   const router = useRouter();
-const [user, setUser] = useState({
+const [agent, setAgent] = useState({
   company_id: "",
   institutions: [],
   mic_email_id: "",
@@ -39,8 +39,24 @@ const [user, setUser] = useState({
   registration_number: "",
   role: "",
   status: false,
-  user_id: "",
+  agent_id: "",
   image: ""
+});
+
+
+const [farmerData, setFarmerData] = useState({
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  country: "",
+  dateOfBirth: "",
+  gender: "",
+  idNumber: "",
+  idType: "",
+  mainAddress: "",
+  mobileTelephoneNumber: "",
+  signature:'',
+  id:""
 });
 
 const [companyData, setCompanyData] = useState({
@@ -53,6 +69,13 @@ const [companyData, setCompanyData] = useState({
   const [loadingVerifyNiN,setLoadingVerifyNiN] = useState(false)
 const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
 const [step, setStep] = useState<number>(1);
+const [showTagNameInput,setShowTagName] = useState(false)
+const [box, setBox] = useState([
+     40,
+    40,
+     240,
+     240,
+  ]);
  
 
   // ---------------------------
@@ -68,7 +91,7 @@ const [step, setStep] = useState<number>(1);
     }
 
     await db.runAsync("DELETE FROM session;");
-    setUser(null);
+    setAgent(null);
     Alert.alert("Logged out", "You have been logged out.");
     router.replace("/");
   };
@@ -103,7 +126,7 @@ const [step, setStep] = useState<number>(1);
         setSigningIn(false);
         return;
       }
-      setUser({
+      setAgent({
         company_id: userDetails.company_id,
         institutions: userDetails.institutions,
         mic_email_id: userDetails.mic_email_id,
@@ -113,7 +136,7 @@ const [step, setStep] = useState<number>(1);
         registration_number: userDetails.registration_number,
         role: userDetails.role,
         status: userDetails.status,
-        user_id: userDetails.user_id,
+        agent_id: userDetails.user_id,
         image: userData.image
       })
       // console.log(userDetails);
@@ -186,25 +209,27 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
        const res = response.data;
        console.log(res);
        
-       //const message = res?.message?.toLowerCase() || "";
-       //const statusFound = res?.data?.status?.toLowerCase() === "found";
+      const message = res?.message?.toLowerCase() || "";
+       const statusFound = res?.data?.status?.toLowerCase() === "found";
       
-  
-         // If found
-         // setIprsStatus(true);
-         // Extract and dispatch farmer data from IPRS
-        //  const farmerData = {
-        //    firstName: res.data.firstName,
-        //    middleName: res.data.middleName,
-        //    lastName: res.data.lastName,
-        //    country: res.data.country,
-        //    dateOfBirth: res.data.dateOfBirth,
-        //    gender: res.data.gender,
-        //    idNumber: res.data.idNumber,
-        //    idType: res.data.identityType,
-        //    mainAddress: res.data.mainAddress,
-        //    mobileTelephoneNumber: res.data.mobileTelephoneNumber,
-        //  };
+  if(statusFound){
+    setFarmerData({
+  firstName: res.data.firstName,
+  middleName: res.data.middleName,
+  lastName: res.data.lastName,
+  country: res.data.country,
+  dateOfBirth: res.data.dateOfBirth,
+  gender: res.data.gender,
+  idNumber: res.data.idNumber,
+  idType: res.data.identityType,
+  mainAddress: res.data.mainAddress,
+  mobileTelephoneNumber: res.data.mobileTelephoneNumber,
+  signature:res.data.signature,
+  id:res.data.identifier
+});
+  }
+         
+         
          // dispatch({ type: 'SET_FARMER_DATA', payload: farmerData });
   
           const resp = await query_db(farmerNationalId,selectedCountry);
@@ -223,8 +248,8 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
   const query_db = async(farmerNationalId,selectedCountry) => {
     const data = {
       farmer_national_id: farmerNationalId,
-      agent_id: user.user_id,
-      institution_id:user.company_id,
+      agent_id: agent.agent_id,
+      institution_id:agent.company_id,
       country: getCountryCode(selectedCountry),
       env: 'Qua',
     };
@@ -244,7 +269,101 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
 
 
 
-//Verify NIN function
+//CallPerformanceMetrics
+const callPerformanceMetrics = async (type, response) => {
+    try {
+        const payload = {
+        record: {
+            agent_id: agent.agent_id,
+            institution_id: agent.company_id,
+            request_source: "Halisi_V1.0",
+            API_function: type === "verify" ? "VerifyFarmer" : "EnrollFarmer",
+            API_verification_result: type === "verify" ? response.match : null,
+            Manual_verification_result: null,
+            timeStamp: response.timestamp,
+            API_verification_score: response.score ?? null,
+            API_Deduplication_result: type === "enroll" ? response.dedup_result : null,
+            API_Deduplication_score: type === "enroll" ? response.dedup_score : null,
+        },
+        env: "Qua",
+      };
+
+      await axios.post(
+        "https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/getperformancemetrics",
+        payload
+      );
+    } catch (err) {
+      console.error("Error fetching performance metrics:", err);
+    }
+    };
+
+     const writeToRecord = (apidata,operation) => {
+        let updatedSubmitJsonData = {};
+
+        updatedSubmitJsonData = Object.assign({}, apidata, {
+        consent: true,
+        agent_name: agent.name ?? "",
+        agent_institution: agent.institutions[0] ?? "",
+        agent_email: agent?.mic_email_id ?? "",
+        agent_verified_email: agent?.mic_email_id ?? false,
+        agent_id: agent.agent_id ?? "",
+        institution_id: agent.company_id ?? "",
+
+        // Conditionally add fields:
+        ...(operation === "register" && agent.role === "field_officer"
+            ? {
+                agent_id_registration: agent.agent_id ?? "",
+                agent_name_registration: agent?.name ?? "",
+                agent_institution_registration: agent.institutions[0] ?? "",
+                agent_email_registration: agent.mic_email_id ?? "",
+                agent_verified_email_registration: agent?.mic_email_id ?? false,
+                agent_institution_id_registration: agent.company_id ?? ""
+            }
+            : {}),
+
+        ...(operation === "update" && agent.role === "field_officer"
+            ? {
+                agent_id_request: agent.agent_id ?? "",
+                agent_name_request: agent?.name ?? "",
+                agent_institution_request: agent.institutions[0] ?? "",
+                agent_email_request: agent?.mic_email_id ?? "",
+                agent_verified_email_request: agent?.mic_email_id ?? false,
+                agent_institution_id_request: agent.company_id ?? ""
+            }
+            : {}),
+
+        ...(operation === "update" && agent.role === "veterinarian"
+            ? {
+                veterinarian_id: agent.agent_id ?? "",
+                veterinarian_name_request: agent?.name ?? "",
+                veterinarian_institution_request: agent.institutions[0] ?? "",
+                veterinarian_email_request: agent?.mic_email_id ?? "",
+                veterinarian_verified_email_request: agent?.mic_email_id ?? false,
+                veterinarian_institution_id_request: agent.company_id ?? ""
+            }
+            : {})
+        });
+        let data = {
+            record: updatedSubmitJsonData,
+            env: 'Qua'
+        };
+
+        axios
+        .post(
+            "https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createfarmer",
+
+            data,
+            { timeout: 20000 }
+        )
+        .then((data) => {
+            let res = data.data;
+            if (res.success) {
+                // dispatch({ type: 'SET_RECORD_ID', payload:res.record_id});
+            } else {
+                // setRecheckMessage(true);
+            }
+        });
+    };
 
   
 
@@ -255,18 +374,21 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
   return (
     <UserContext.Provider
       value={{
-        user,
+        agent,
         loading,
         handleSignIn,
         logout,
-        setUser,
+        setAgent,
         verify_nin,
         loadingVerifyNiN,
         query_db,
         setLoadingVerifyNiN,
         registerNewLivestock,
         setRegisterNewLivestock, 
-        step,setStep
+        step,setStep,showTagNameInput,setShowTagName,callPerformanceMetrics, 
+        farmerData,setFarmerData,
+        writeToRecord,
+        box,setBox
       }}
     >
       {children}

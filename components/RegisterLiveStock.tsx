@@ -1,8 +1,17 @@
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useUser } from "../Hooks/useUserGlobal";
 
 export const RegisterAnotherLivestockScreen = () => {
+  const{step,setStep,setShowTagName,setRegisterNewLivestock}= useUser()
+  const handleRegisterAnotherLivestock = ()=>{
+    setRegisterNewLivestock(false)
+    setStep(3)
+    console.log("button clicked",step);
+
+    setShowTagName(true)
+  }
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Would you like to register another livestock?</Text>
@@ -10,7 +19,7 @@ export const RegisterAnotherLivestockScreen = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.yesButton}
-          onPress={() => router.replace('/(tabs)/FarmerForm')}
+          onPress={() => handleRegisterAnotherLivestock()}
         >
           <Text style={styles.buttonText}>Yes</Text>
         </TouchableOpacity>

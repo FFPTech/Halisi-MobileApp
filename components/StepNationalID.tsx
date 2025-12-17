@@ -28,6 +28,7 @@ permission: { granted: boolean };
   toggleCameraFacing: () => void;
   setPhotoBase64: (base64: string | null) => void;
   species: "farmer" | "livestock";
+  onpress:()=>void;
   errors?: {
     nationalId?: string;
     country?: string;
@@ -51,6 +52,7 @@ export default function StepNationalId({
   toggleCameraFacing,
   setPhotoBase64,
   species,
+  onpress,
   errors = {}
 }: StepNationalIdProps) {
   const [showcameraComponent, setShowCameraComponent] = useState(false);
@@ -86,6 +88,7 @@ else{
    await query_db(nationalId,country);
    setLoadingVerifyNiN(false)
   Alert.alert("Your NIN has been enrolled please Proceed to Registration")
+  setShowCameraComponent(true)
 }
     }
     
@@ -152,7 +155,8 @@ if(loadingVerifyNiN){
       toggleCameraFacing={toggleCameraFacing}
       setPhotoBase64={setPhotoBase64}
       species={species}
-      errors={errors}      // <-- REQUIRED
+      errors={errors} 
+      onpress={onpress}     // <-- REQUIRED
     />
     }
     

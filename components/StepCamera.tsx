@@ -1,13 +1,24 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { CameraView } from "expo-camera";
-import * as FaceDetector from "expo-face-detector";
 import * as ImageManipulator from "expo-image-manipulator";
 import React, { useState } from "react";
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  PanResponder,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useUser } from "../Hooks/useUserGlobal";
 import CommonButton from "./CommonButtonComponent";
 import FormStepWrapper from "./FormStepWrapper";
 
+/*
+  Box format from context:
+  [x, y, width, height]
+*/
 
 interface StepCameraProps {
   permission: { granted: boolean };
@@ -18,12 +29,10 @@ interface StepCameraProps {
   facing: "front" | "back";
   toggleCameraFacing: () => void;
   setPhotoBase64: (base64: string | null) => void;
-  
+  onpress: () => void;
   species: "farmer" | "livestock";
-  errors?: { photoUri?: string }; 
+  errors?: { photoUri?: string };
 }
-
-
 
 export default function StepCamera({
   permission,
@@ -35,60 +44,130 @@ export default function StepCamera({
   toggleCameraFacing,
   setPhotoBase64,
   species,
-  errors
-  
+  onpress,
 }: StepCameraProps) {
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
-  const [faces, setFaces] = useState<FaceDetector.FaceFeature[]>([]);
-  const {setRegisterNewLivestock} = useUser()
-  
-  // Face detection is handled via the camera's frame processor
-  // For now, we'll just track the container size
-  const takePictureIfFaceDetected = async () => {
-  try {
-   
-    
-    if (cameraRef.current) {
-      // Capture a photo (uri)
-      const photo = await cameraRef.current.takePictureAsync({ base64: false, quality: 0.9 });
-      console.log(photo);
-      
-      if (!photo?.uri) throw new Error("No photo uri returned from camera");
 
-      // Resize/compress
+  /* CONTEXT BOX */
+  const { box, setBox } = useUser(); // [x, y, width, height]
+  const [x0, y0, w0, h0] = box;
+
+  /* ==========================
+     BOUNDING BOX LOGIC
+  =========================== */
+  const MIN_SIZE = 120;
+  const EDGE = 18;
+
+  const [mode, setMode] = useState<
+    null | "move" | "l" | "r" | "t" | "b" | "tl" | "tr" | "bl" | "br"
+  >(null);
+
+  const clamp = (v: number, min: number, max: number) =>
+    Math.max(min, Math.min(v, max));
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+
+    onPanResponderGrant: (e) => {
+      const { locationX, locationY } = e.nativeEvent;
+
+      const l = x0;
+      const r = x0 + w0;
+      const t = y0;
+      const b = y0 + h0;
+
+      const nl = Math.abs(locationX - l) < EDGE;
+      const nr = Math.abs(locationX - r) < EDGE;
+      const nt = Math.abs(locationY - t) < EDGE;
+      const nb = Math.abs(locationY - b) < EDGE;
+
+      if (nl && nt) setMode("tl");
+      else if (nr && nt) setMode("tr");
+      else if (nl && nb) setMode("bl");
+      else if (nr && nb) setMode("br");
+      else if (nl) setMode("l");
+      else if (nr) setMode("r");
+      else if (nt) setMode("t");
+      else if (nb) setMode("b");
+      else if (
+        locationX > l &&
+        locationX < r &&
+        locationY > t &&
+        locationY < b
+      ) {
+        setMode("move");
+      }
+    },
+
+    onPanResponderMove: (_, g) => {
+      setBox(([x, y, width, height]) => {
+        let nx = x;
+        let ny = y;
+        let nw = width;
+        let nh = height;
+
+        if (mode === "move") {
+          nx = clamp(x + g.dx, 0, containerSize.w - width);
+          ny = clamp(y + g.dy, 0, containerSize.h - height);
+        }
+
+        if (mode === "l" || mode === "tl" || mode === "bl") {
+          const lx = clamp(x + g.dx, 0, x + width - MIN_SIZE);
+          nw -= lx - x;
+          nx = lx;
+        }
+
+        if (mode === "r" || mode === "tr" || mode === "br") {
+          nw = clamp(width + g.dx, MIN_SIZE, containerSize.w - x);
+        }
+
+        if (mode === "t" || mode === "tl" || mode === "tr") {
+          const ty = clamp(y + g.dy, 0, y + height - MIN_SIZE);
+          nh -= ty - y;
+          ny = ty;
+        }
+
+        if (mode === "b" || mode === "bl" || mode === "br") {
+          nh = clamp(height + g.dy, MIN_SIZE, containerSize.h - y);
+        }
+
+        return [nx, ny, nw, nh];
+      });
+    },
+
+    onPanResponderRelease: () => setMode(null),
+  });
+
+  /* ==========================
+     CAMERA
+  =========================== */
+  const takePicture = async () => {
+    try {
+      if (!cameraRef.current) return;
+
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
+
       const resized = await ImageManipulator.manipulateAsync(
         photo.uri,
         [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-
+        {
+          compress: 0.7,
+          format: ImageManipulator.SaveFormat.JPEG,
+          base64: true,
+        }
       );
-console.log(photo.uri);
 
-      setPhotoUri(resized.uri ?? photo.uri);
+      setPhotoUri(resized.uri);
       setPhotoBase64(resized.base64 ?? null);
+    } catch {
+      Alert.alert("Camera error", "Failed to capture image");
     }
-  } catch (err) {
-    console.error("Camera error:", err);
-    Alert.alert("Camera error", "Could not take or process picture.");
-  }
-};
-
-
-
-const handleEnroll = ()=>{
-  if(species === "livestock"){
-
-    setRegisterNewLivestock(true)
-  }
-}
-
+  };
 
   if (!permission.granted) {
     return (
       <FormStepWrapper title="Step 2: Capture User Photo">
-        <Text>We need your permission to use the camera.</Text>
-
-        <CommonButton title="Grant Permission" style={styles.permissionButton} onPress={requestPermission}/>
+        <CommonButton title="Grant Permission" onPress={requestPermission} />
       </FormStepWrapper>
     );
   }
@@ -97,8 +176,48 @@ const handleEnroll = ()=>{
     <FormStepWrapper title="Step 2: Capture User Photo">
       {photoUri ? (
         <>
-          <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-          <TouchableOpacity style={styles.retakeBtn} onPress={() => setPhotoUri(null)}>
+          <View
+            style={styles.photoWrapper}
+            onLayout={(e) =>
+              setContainerSize({
+                w: e.nativeEvent.layout.width,
+                h: e.nativeEvent.layout.height,
+              })
+            }
+          >
+            <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+
+            <View
+              {...panResponder.panHandlers}
+              style={[
+                styles.boundingBox,
+                {
+                  left: x0,
+                  top: y0,
+                  width: w0,
+                  height: h0,
+                },
+              ]}
+            >
+              {["tl", "tr", "bl", "br"].map((k) => (
+                <View
+                  key={k}
+                  style={[
+                    styles.corner,
+                    k === "tl" && { top: -8, left: -8 },
+                    k === "tr" && { top: -8, right: -8 },
+                    k === "bl" && { bottom: -8, left: -8 },
+                    k === "br" && { bottom: -8, right: -8 },
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.retakeBtn}
+            onPress={() => setPhotoUri(null)}
+          >
             <Text style={styles.retakeText}>Retake Photo</Text>
           </TouchableOpacity>
         </>
@@ -106,36 +225,33 @@ const handleEnroll = ()=>{
         <>
           <View
             style={styles.cameraContainer}
-            onLayout={(e) => {
-              const { width, height } = e.nativeEvent.layout;
-              setContainerSize({ w: width, h: height });
-            }}
+            onLayout={(e) =>
+              setContainerSize({
+                w: e.nativeEvent.layout.width,
+                h: e.nativeEvent.layout.height,
+              })
+            }
           >
             <CameraView
               ref={cameraRef}
               style={styles.cameraBox}
               facing={facing}
-              mirror={true}
-              
+              mirror
             />
-
-            {containerSize.w > 0 && containerSize.h > 0 && (
-              <MaskOverlay species={species} w={containerSize.w} h={containerSize.h} faces={faces} />
-            )}
+            <MaskOverlay
+              species={species}
+              w={containerSize.w}
+              h={containerSize.h}
+            />
           </View>
 
-          {errors?.photoUri && (
-  <Text style={{ color: "red", marginTop: 6 }}>{errors.photoUri}</Text>
-)}
-
-
-          {/* CONTROL BUTTONS */}
+          {/* ✅ CAMERA BUTTONS (RESTORED) */}
           <View style={styles.controlBar}>
             <TouchableOpacity onPress={toggleCameraFacing}>
               <Ionicons name="camera-reverse" size={32} color="#2e7d32" />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={()=>takePictureIfFaceDetected()}>
+            <TouchableOpacity onPress={takePicture}>
               <Ionicons name="camera" size={38} color="#2e7d32" />
             </TouchableOpacity>
 
@@ -145,89 +261,69 @@ const handleEnroll = ()=>{
           </View>
         </>
       )}
-      <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >
 
-    <CommonButton title="Enroll" onPress={()=>handleEnroll()}/>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <CommonButton title="Enroll" onPress={onpress} />
       </View>
     </FormStepWrapper>
   );
 }
 
-/* -----------------------------------------------------------------------
-   MASK OVERLAY — OVAL for farmer, TRAPEZOID for livestock
------------------------------------------------------------------------- */
-interface MaskOverlayProps {
-  species: "farmer" | "livestock";
-  w: number;
-  h: number;
-  faces?: FaceDetector.FaceFeature[];
-}
-
-function MaskOverlay({ species, w, h, faces = [] }: MaskOverlayProps) {
-  const dimColor = "rgba(0,0,0,0.55)";
-
-  // For farmer: clear oval in the middle
+/* ==========================
+   MASK OVERLAY
+========================== */
+function MaskOverlay({ species, w, h }: any) {
   if (species === "farmer") {
-    const maskW = w * 0.55;
-    const maskH = h * 0.75;
-    const x = (w - maskW) / 2;
-    const y = (h - maskH) / 2;
-
+    const mw = w * 0.55;
+    const mh = h * 0.75;
     return (
-      <View style={StyleSheet.absoluteFill}>
-        {/* DARK OUTSIDE */}
-        <View style={{ position: "absolute", top: 0, left: 0, width: w, height: y,  }} />
-        <View style={{ position: "absolute", top: y + maskH, left: 0, width: w, height: h - (y + maskH),  }} />
-        <View style={{ position: "absolute", top: y, left: 0, width: x, height: maskH, }} />
-        <View style={{ position: "absolute", top: y, left: x + maskW, width: w - (x + maskW), height: maskH,  }} />
-        {/* BORDER */}
-        <View style={{ position: "absolute", top: y, left: x, width: maskW, height: maskH, borderRadius: maskH / 2, borderWidth: 4, borderColor: "limegreen" }} />
-      </View>
+      <View
+        style={{
+          position: "absolute",
+          top: (h - mh) / 2,
+          left: (w - mw) / 2,
+          width: mw,
+          height: mh,
+          borderRadius: mh / 2,
+          borderWidth: 4,
+          borderColor: "limegreen",
+        }}
+      />
     );
   }
-
-  // For livestock: trapezoid clear area
-  if (species === "livestock") {
-    const topWidth = w * 0.65;
-    const bottomWidth = w * 0.45;
-    const height = h * 0.75;
-    const topY = (h - height) / 2;
-    const bottomY = topY + height;
-    const center = w / 2;
-    const topLeft = center - topWidth / 2;
-    const topRight = center + topWidth / 2;
-    const bottomLeft = center - bottomWidth / 2;
-
-    return (
-      <View style={StyleSheet.absoluteFill}>
-        {/* DARK OUTSIDE */}
-        <View style={{ position: "absolute", top: 0, left: 0, width: w, height: topY,  }} />
-        <View style={{ position: "absolute", top: bottomY, left: 0, width: w, height: h - bottomY,  }} />
-        <View style={{ position: "absolute", top: topY, left: 0, width: topLeft, height: height,  }} />
-        <View style={{ position: "absolute", top: topY, left: topRight, width: w - topRight, height: height,  }} />
-
-        {/* BORDER LINES */}
-        <View style={{ position: "absolute", top: topY, left: topLeft, width: topWidth, borderTopWidth: 4, borderColor: "limegreen" }} />
-        <View style={{ position: "absolute", top: bottomY, left: bottomLeft, width: bottomWidth, borderTopWidth: 4, borderColor: "limegreen" }} />
-        <View style={{ position: "absolute", top: topY, left: topLeft, width: 4, height: height, backgroundColor: "limegreen", transform: [{ skewY: "-14deg" }] }} />
-        <View style={{ position: "absolute", top: topY, left: topRight - 4, width: 4, height: height, backgroundColor: "limegreen", transform: [{ skewY: "14deg" }] }} />
-      </View>
-    );
-  }
-
   return null;
 }
 
-/* -----------------------------------------------------------------------
+/* ==========================
    STYLES
------------------------------------------------------------------------- */
+========================== */
 const styles = StyleSheet.create({
-  permissionButton: { padding: 10, backgroundColor: "#2e7d32", borderRadius: 8, marginTop: 10 },
-  permissionText: { color: "#fff", fontWeight: "600" },
-  cameraContainer: { width: "100%", height: 300, borderRadius: 12, overflow: "hidden", position: "relative" },
+  cameraContainer: { width: "100%", height: 300 },
   cameraBox: { width: "100%", height: "100%" },
-  controlBar: { flexDirection: "row", justifyContent: "space-around", padding: 12, marginTop: 12, borderRadius: 14 },
-  photoPreview: { width: "100%", height: 300, marginBottom: 12 },
-  retakeBtn: { padding: 12, backgroundColor: "#2e7d32", borderRadius: 10, alignItems: "center" },
-  retakeText: { color: "#fff", fontWeight: "600" }
+  controlBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 12,
+  },
+  photoWrapper: { width: "100%", height: 300 },
+  photoPreview: { width: "100%", height: "100%" },
+  boundingBox: {
+    position: "absolute",
+    borderWidth: 3,
+    borderColor: "limegreen",
+  },
+  corner: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    backgroundColor: "limegreen",
+  },
+  retakeBtn: {
+    marginTop: 12,
+    backgroundColor: "#2e7d32",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  retakeText: { color: "#fff", fontWeight: "600" },
 });
