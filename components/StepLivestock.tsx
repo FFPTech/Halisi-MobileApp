@@ -13,9 +13,9 @@ const StepLivestock = ({nextStep,livestocktag,setLivestockTag,errors,permission,
   cameraRef,
   facing,
   toggleCameraFacing,
-  setPhotoBase64,
+  setPhotoBase64,handleSubmitLivestock
   
-  }:{livestocktag:string, setLivestockTag:(val:string)=>void,errors?:{livestocktag?,livestockPhotoUri?},requestPermission:()=>void,livestockPhotoUri:string,facing,toggleCameraFacing:()=>void,setPhotoBase64,setLivestockPhotoUri,cameraRef,permission,nextStep:()=>void}) => {
+  }:{livestocktag:string, setLivestockTag:(val:string)=>void,errors?:{livestocktag?,livestockPhotoUri?},requestPermission:()=>void,livestockPhotoUri:string,facing,toggleCameraFacing:()=>void,setPhotoBase64,setLivestockPhotoUri,cameraRef,permission,nextStep:()=>void,handleSubmitLivestock}) => {
   const [showCameraComponent, SetShowCameraComponent] =useState(false)
   
   return (
@@ -31,7 +31,7 @@ const StepLivestock = ({nextStep,livestocktag,setLivestockTag,errors,permission,
                 toggleCameraFacing={toggleCameraFacing}
                 setPhotoBase64={setPhotoBase64}
                 species="livestock"
-                errors={errors.livestockPhotoUri} />      : <FormStepWrapper title={"Livestock Authentication"}>
+                errors={errors.livestockPhotoUri} onpress={handleSubmitLivestock}/>      : <FormStepWrapper title={"Livestock Authentication"}>
       
         <InputField onChangeText={setLivestockTag} error={errors.livestocktag} value={livestocktag}  label="Livestock Tag Number" placeholder="Enter Tag Number" />  
         <View style={{marginTop:30,flex:1, justifyContent:"center",alignItems:"center"}} >

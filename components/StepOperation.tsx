@@ -13,8 +13,8 @@ const StepOperation = ({nextStep,livestocktag,setLivestockTag,errors, permission
   facing,
   toggleCameraFacing,
   setPhotoBase64s,
- 
-  }:{livestocktag:string,setLivestockTag:(val:string)=>void,errors?:{},requestPermission:()=>void,livestockPhotoUri:string,facing:string,toggleCameraFacing:()=>void,setPhotoBase64s,setLivestockPhotoUri:(val:string | null)=>void,cameraRef,permission:any,nextStep:()=>void}) => {
+  handleSubmitLivestock
+  }:{livestocktag:string,setLivestockTag:(val:string)=>void,errors?:{},requestPermission:()=>void,livestockPhotoUri:string,facing:string,toggleCameraFacing:()=>void,setPhotoBase64s,setLivestockPhotoUri:(val:string | null)=>void,cameraRef,permission:any,nextStep:()=>void,handleSubmitLivestock:()=>void}) => {
   const {showTagNameInput,setShowTagName} = useUser()
   const [showCameraComponent, SetShowCameraComponent] =useState(false)
   
@@ -33,6 +33,7 @@ const StepOperation = ({nextStep,livestocktag,setLivestockTag,errors, permission
           facing={facing}
           toggleCameraFacing={toggleCameraFacing}
           setPhotoBase64={setPhotoBase64s}
+          handleSubmitLivestock={handleSubmitLivestock}
         />
                    
          

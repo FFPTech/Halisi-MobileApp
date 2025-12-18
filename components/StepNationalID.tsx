@@ -58,6 +58,7 @@ export default function StepNationalId({
   const [showcameraComponent, setShowCameraComponent] = useState(false);
   const {verify_nin,loadingVerifyNiN,query_db, setLoadingVerifyNiN} = useUser();
   const [useIprsVerification, setUseIprsVerification] = useState(false)
+const [submitted, setSubmitted] = useState(false);
 
 
 // const handleSubmit = () => {
@@ -77,25 +78,23 @@ export default function StepNationalId({
 //   };
 
 
-  const handleSubmit = async()=>{
-    if(nationalId !== ''){
-if(useIprsVerification){
+ const handleSubmit = async () => {
+  setSubmitted(true);
 
-  await verify_nin(nationalId,country);
-}
-else{
-   setLoadingVerifyNiN(true)
-   await query_db(nationalId,country);
-   setLoadingVerifyNiN(false)
-  Alert.alert("Your NIN has been enrolled please Proceed to Registration")
-  setShowCameraComponent(true)
-}
-    }
-    
-    try {
+  if (!nationalId || !country) {
+    return;
+  }
 
-    } catch (error) {
-      console.log("Error verifying NIN: ", error)}}
+  if (useIprsVerification) {
+    await verify_nin(nationalId, country);
+  } else {
+    setLoadingVerifyNiN(true);
+    await query_db(nationalId, country);
+    setLoadingVerifyNiN(false);
+    Alert.alert("Your NIN has been enrolled please Proceed to Registration");
+    setShowCameraComponent(true);
+  }
+};
 
 if(loadingVerifyNiN){
   return <LoadingSpinner size="large" color="#2e7d32" />
@@ -120,7 +119,7 @@ if(loadingVerifyNiN){
             { label: "Kenya", value: "Kenya" },
             { label: "Congo", value: "Congo" }
           ]}
-          error={!country ? "Country is required" : undefined}
+          error={submitted && !country ? "Country is required" : undefined}
           // <-- show error under dropdown
         />
       </View>
@@ -132,11 +131,13 @@ if(loadingVerifyNiN){
           onChangeText={setNationalId}
           placeholder="Enter Farmer NIN"
           error={
-          nationalId.length === 0
-            ? "National ID is required"
-            : nationalId.length > 20
-            ? "National ID cannot exceed 20 digits"
-            : undefined
+          submitted
+      ? nationalId.length === 0
+        ? "National ID is required"
+        : nationalId.length > 20
+        ? "National ID cannot exceed 20 digits"
+        : undefined
+      : undefined
         }
           numbersOnly// <-- show error under input
         />

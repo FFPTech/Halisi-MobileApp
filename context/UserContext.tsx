@@ -70,6 +70,8 @@ const [companyData, setCompanyData] = useState({
 const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
 const [step, setStep] = useState<number>(1);
 const [showTagNameInput,setShowTagName] = useState(false)
+const [operation,setoperation] = useState("register")
+const [record,setRecord]=useState()
 const [box, setBox] = useState([
      40,
     40,
@@ -90,7 +92,7 @@ const [box, setBox] = useState([
       console.log("Google logout error:", e);
     }
 
-    await db.runAsync("DELETE FROM session;");
+    
     setAgent(null);
     Alert.alert("Logged out", "You have been logged out.");
     router.replace("/");
@@ -189,6 +191,65 @@ const getCountryCode = (country) => {
     return countryMap[country] || '';
   };
 
+
+const handleFarmerForm =async(apidata)=>{
+    let updatedSubmitJsonData ={}
+    updatedSubmitJsonData= Object.assign(
+        {},apidata
+    )
+    let data ={
+        record:updatedSubmitJsonData,
+        record_id:record,
+        env:"Qua",
+        operation:operation,
+        uuid:farmerData.id ||"",
+        agent_id:agent.agent_id,
+        institution_id:agent.company_id
+    }
+    try {
+      
+      const response = await axios.post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer",data)
+  
+      const res =response.data
+      console.log(res);
+      if(res.success){
+          Alert.alert("Successfully registered")
+      }
+    } catch (error) {
+      console.log("There was an error",error);
+      
+    }
+    
+}
+
+
+const registerLivestockTag = async(livestockTagNumber)=>{
+
+    let data = {
+        livestock_id_number:livestockTagNumber,
+        agent_id:agent.agent_id,
+        institution_id:agent.company_id,
+        env:"Qua"
+    }
+    const res = await axios.post('https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/realivestocktagis', data)
+    const response = res.data
+    if(response.identifier === null){
+        let res ={
+            identifier:'N/A',
+            signature:'N/A'
+        }
+        console.log(response);
+        //save it in state
+
+    }
+    else{
+        //write verification re-direct code here
+
+    }
+}
+
+
+
 const verify_nin = async(farmerNationalId,selectedCountry) => {
     // dispatch({ type: 'SET_FARMER_NATIONAL_NUMBER', payload: farmerNationalNumber });
     // setApiCallInProgress(true);
@@ -260,6 +321,7 @@ const verify_nin = async(farmerNationalId,selectedCountry) => {
         .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readfarmernin", data)
       const responseData = response.data;
       console.log("Database Response:", responseData);
+      setRecord(responseData.db_data[0].id)
       return responseData;  
     } catch (error) {
       console.log(error);
@@ -297,6 +359,34 @@ const callPerformanceMetrics = async (type, response) => {
     }
     };
 
+
+
+    //CallPerformanceMetricsLivestock
+    const callPerformanceMetricsForLivestock  = async(type,response)=>{
+    try {
+        const payload ={
+            record:{
+                agent_id:agent.agent_id,
+                insitution_id:agent.company_id,
+                request_source:"Halisi_v1.0",
+                API_function:type ==="verify"?"verifyLivestock":"EnrollLivetock",
+                Manual_verificaton:null,
+                timeStamp:response.timestamp,
+                API_verification_score:response.score??null,
+                API_Deduplication_result:type === "enroll"? response.dedupresult:null,
+                API_Deduplication_score:type ==="enroll"? Number(response.dedup_score):null,
+            },
+            env:"Qua",
+        }
+        const resp = await axios.post ('https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/getPerformancemetrics',payload)
+        console.log(resp);
+        
+    } catch (error) {
+        console.log("");
+        
+    }
+}
+//write to DB
      const writeToRecord = (apidata,operation) => {
         let updatedSubmitJsonData = {};
 
@@ -359,6 +449,7 @@ const callPerformanceMetrics = async (type, response) => {
             let res = data.data;
             if (res.success) {
                 // dispatch({ type: 'SET_RECORD_ID', payload:res.record_id});
+                setRecord(res.record_id)
             } else {
                 // setRecheckMessage(true);
             }
@@ -388,7 +479,10 @@ const callPerformanceMetrics = async (type, response) => {
         step,setStep,showTagNameInput,setShowTagName,callPerformanceMetrics, 
         farmerData,setFarmerData,
         writeToRecord,
-        box,setBox
+        box,setBox,operation,
+        handleFarmerForm,
+        callPerformanceMetricsForLivestock,
+        registerLivestockTag
       }}
     >
       {children}

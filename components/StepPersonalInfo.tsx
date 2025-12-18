@@ -1,5 +1,6 @@
 // components/steps/StepPersonalInfo.tsx
-import { Text, View } from "react-native";
+import { Text, View, } from "react-native";
+import CommonButton from "./CommonButtonComponent";
 import Dropdown from "./DropDown";
 import FormStepWrapper from "./FormStepWrapper";
 import InputField from "./InputComponent";
@@ -46,6 +47,7 @@ export default function StepPersonalInfo({
   setAnnualIncome,
   farmerKRAPin,
   setFarmerKRApin,
+  handleFarmerSubmit,
 
   // 🔥 ADD THIS
   errors ,
@@ -266,6 +268,9 @@ export default function StepPersonalInfo({
           onChangeText={setFarmerKRApin}
           error={errors.farmerKRAPin}
         />
+      </View>
+      <View style={{flex:1,justifyContent:'center',alignContent:'center'}}>
+        <CommonButton title="Register" onPress={handleFarmerSubmit}/>
       </View>
     </FormStepWrapper>
   );

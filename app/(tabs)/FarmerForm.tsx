@@ -15,7 +15,6 @@ import {
 import axios from "axios";
 import { MultiStepComponent } from "../../components/MultiStep";
 import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
-import StepCamera from "../../components/StepCamera";
 import StepNationalId from "../../components/StepNationalID";
 import StepOperation from "../../components/StepOperation";
 import StepPersonalInfo from "../../components/StepPersonalInfo";
@@ -26,7 +25,7 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box} = useUser();
+  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock} = useUser();
 const cities = {
     Kenya: ["Nairobi", "Mombasa", "Kisumu"],
     Congo: ["Kinshasa", "Goma", "Lubumbashi"]
@@ -71,7 +70,6 @@ const [livestockTag, setLivestockTag] = useState("");
 const [apiCallInProgress,setApiCallInProgress] =useState(false)
 const [isSubmit, setIsSubmit] = useState(false)
 const [isSuccess,setIsSuccess]=useState(false)
-const [operation,setoperation] = useState("register")
 const base64Header = "data:image/jpeg;base64,";
 // console.log(photoBase64);
 
@@ -101,88 +99,41 @@ const handleLivestockSubmit = async () => {
   Alert.alert("Success", "Livestock registered successfully!");
 };
 
-//Validation checks
-// const validateStep = () => {
-//   const newErrors: { [key: string]: string } = {};
+const apidata ={
+  firstName,
+        lastName,
+        phone,
+        gender,
+        dob,
+        country,
+        city,
+        nationalId,
+        address,
+        verify,
+        monthlyIncome,
+        isMemberCooperative,
+        nameOfCooperative,
+        experience,
+        ageCategory,
+        schooling,
+        accommodation,
+        residentialStatus,
+        tenureWithFinancialInstitution,
+        annualIncome,
+        farmerKRAPin,
+        
+} 
 
-//   switch (step) {
-//     case 1: // StepNationalId
-//       if (!nationalId?.trim()) newErrors.nationalId = "National ID is required";
-//       if (!country?.trim()) newErrors.country = "Country is required";
-//       break;
+const handlefarmerRegister =async()=>{
+validateStep()
 
-//     case 2: // StepCamera
-//       if (!photoUri) newErrors.photoUri = "Profile photo is required";
-//       break;
-
-//     case 3: // StepPersonalInfo
-//       if (!firstName?.trim()) newErrors.firstName = "First Name is required";
-//       if (!lastName?.trim()) newErrors.lastName = "Last Name is required";
-//       if (!email?.trim()) newErrors.email = "Email is required";
-//       if (!gender?.trim()) newErrors.gender = "Gender is required";
-//       if (!nationalId?.trim()) newErrors.nationalId = "National ID is required";
-//       if (!monthlyIncome?.trim()) newErrors.monthlyIncome = "Monthly income is required";
-//       if (isMemberCooperative && !nameOfCooperative?.trim()) newErrors.nameOfCooperative = "Cooperative name is required";
-//       if (!experience) newErrors.experience = "Experience is required";
-//       if (!ageCategory) newErrors.ageCategory = "Age category is required";
-//       if (!schooling) newErrors.schooling = "Schooling is required";
-//       if (!accommodation) newErrors.accommodation = "Accommodation is required";
-//       if (!residentialStatus) newErrors.residentialStatus = "Residential status is required";
-//       if (!tenureWithFinancialInstitution) newErrors.tenureWithFinancialInstitution = "Tenure is required";
-//       if (!annualIncome) newErrors.annualIncome = "Annual income is required";
-//       if (!farmerKRAPin?.trim()) newErrors.farmerKRAPin = "KRA Pin is required";
-//       break;
-
-//   }
-
-//   setErrors(newErrors);
-
-//   return Object.keys(newErrors).length === 0;
-// };
+await handleFarmerForm(apidata)
+  
+}
 
 
 
-//submit form
-  // const handleSubmit = async () => {
-  //   if (!firstName || !lastName || !nationalId || !phone) {
-  //     Alert.alert("Missing Fields", "Please fill all required fields");
-  //     return;
-  //   }
 
-  //   try {
-  //     await saveFarmer({
-  //       firstName,
-  //       lastName,
-  //       phone,
-  //       gender,
-  //       dob,
-  //       country,
-  //       city,
-       
-  //       nationalId,
-  //       address,
-  //       verify,
-  //       monthlyIncome,
-  //       isMemberCooperative,
-  //       nameOfCooperative,
-  //       experience,
-  //       ageCategory,
-  //       schooling,
-  //       accommodation,
-  //       residentialStatus,
-  //       tenureWithFinancialInstitution,
-  //       annualIncome,
-  //       farmerKRAPin,
-  //     });
-
-  //     Alert.alert("Success", "Farmer registered successfully");
-  //     // Optionally clear form
-  //   } catch (e) {
-  //     console.log(e);
-  //     Alert.alert("Error", "Failed to save farmer");
-  //   }
-  // };
-  // Camera toggle
   const toggleCameraFacing = () =>
     setFacing((current) => (current === "back" ? "front" : "back"));
 
@@ -368,6 +319,141 @@ const validateStep = () => {
                   }
               }
         };
+
+
+
+       const handleSubmitLivestock = () => {
+        setApiCallInProgress(true);
+        
+        setIsSubmit(true);
+        console.log("Hello");
+        // console.log("No photo",photoBase64);
+        if (!photoBase64) {
+          console.log("No photo",photoBase64);
+          // photoBase64
+          
+          Alert.alert("Please take a picture")
+          setIsSuccess(false);
+          // Dispatch action to save res object
+        }
+        else {
+            var rect = [parseInt(box[0]),parseInt(box[1]),parseInt(box[2]),parseInt(box[3])];
+
+            if (operation !== "register"){
+                let t0 = performance.now();
+                let data =
+                    {
+                    agent_id: agent.agent_id,
+                    institution_id:agent.institution_id,
+                    image: photoBase64,
+                    signature: farmerData.signature,
+                    id : farmerData.id,
+                    rect: rect,
+                    moveable_rect: rect
+                };
+                console.log("plese let me see", data);
+                
+                axios
+                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifylivestock", data)
+                    .then((data) => {
+                        let humanVerifyAPIResponse = data.data;
+                        // calling performance metrics API function
+                       callPerformanceMetricsForLivestock("verify", humanVerifyAPIResponse);
+                        setApiCallInProgress(false);
+                        // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
+                        // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
+                        // let t1 = performance.now();
+                        // let total = parseInt(t1 - t0);
+                        // setTotalEnrollTimeFarmer(total);
+                        if (humanVerifyAPIResponse.match === false) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess( false);
+                            // setShowFaceMatchNo(true);
+                        }
+                        else if (humanVerifyAPIResponse.match === true) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess(true);
+                            // setShowFaceMatchOk(true);
+                        }
+                        else {
+                            setApiCallInProgress(false);
+                            setIsSuccess(false);
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            // setFaceNotDetected(true);
+                        }
+                        })
+                    .catch((err) => {
+                    if (err.response.status === 501 || err.response.status === 404)
+                    setApiCallInProgress(false);
+                    setIsSuccess(false);
+                    // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                    // setFaceNotDetected(true);
+                    });
+                }
+              else{
+                let t0 = performance.now();
+                
+                let data =
+                    {image: photoBase64,
+                    agent_id: agent.agent_id,
+                    institution_id:agent.company_id,
+                    rect: box,
+                    request_source: 'Halisi_V1.0',
+                    moveable_rect: box};
+                    console.log(data);
+                axios
+                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer", data)
+                    .then((data) => {
+                        let humanEnrollAPIResponse = data.data;
+                        console.log("data", data.data);
+                        
+                        callPerformanceMetrics("enroll", humanEnrollAPIResponse);
+                        // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
+                        // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
+                        // let t1 = performance.now();
+                        // let total = parseInt(t1 - t0);
+                        // setTotalEnrollTimeFarmer(total);
+                        if (humanEnrollAPIResponse.dedup_result === true) {
+                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            setIsSuccess(false);
+                            // setShowDuplicateAlert(true);
+                        } else {
+                            if(humanEnrollAPIResponse.signature === "None" || humanEnrollAPIResponse.signature === null || humanEnrollAPIResponse.signature === undefined){
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            setApiCallInProgress(false);
+                            setIsSuccess(false);
+                            // setFaceNotDetected(true);
+                            }
+                            else{
+                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
+                            setApiCallInProgress(false);
+                            // setSuccessfulAPIcall(true);
+                            writeToRecord(humanEnrollAPIResponse);
+                            setIsSuccess(true);
+                            Alert.alert("Enrolled successfully")
+                            // setShowEnrolledMessage(true);
+                            }
+                        }
+                      }
+                    )
+                    .catch((err) => {
+                      if (err.response.status === 501 || err.response.status === 404)
+                        setIsSuccess(false);
+                        setApiCallInProgress(false);
+                        console.log("There was an error",err);
+                        
+                        //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                        // setFaceNotDetected(true);
+                    });
+                  }
+              }
+        }; 
         const prevStep = () => setStep(step - 1);
 
 
@@ -714,6 +800,7 @@ const validateStep = () => {
       farmerKRAPin={farmerKRAPin}
       setFarmerKRApin={setFarmerKRApin}
       errors={errors} 
+      handleFarmerSubmit ={handlefarmerRegister}
       
     />
       );
@@ -737,26 +824,13 @@ const validateStep = () => {
               toggleCameraFacing={toggleCameraFacing}
               cameraRef={cameraRef}
               nextStep={nextStep}
+handleSubmitLivestock={handleSubmitLivestock}
 
       />
         );
         ;
 
-      case 4:
-        return (
-          <StepCamera
-           permission={permission}
-  requestPermission={requestPermission}
-  photoUri={livestockPhotoUri}
-  setPhotoUri={setLivestockPhotoUri}
-  cameraRef={cameraRef}
-  facing={facing}
-  toggleCameraFacing={toggleCameraFacing}
-  setPhotoBase64={setPhotoBase64}
-  species="livestock"
-  errors={errors}
-      />
-        );
+     
       }
     };
 
@@ -907,9 +981,4 @@ const styles = StyleSheet.create({
   reviewButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 18 },
   downloadButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#1e88e5", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
   submitButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
-
-
-
-
-
 });
