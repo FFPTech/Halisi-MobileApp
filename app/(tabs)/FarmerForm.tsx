@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import axios from "axios";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { MultiStepComponent } from "../../components/MultiStep";
 import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
 import StepNationalId from "../../components/StepNationalID";
@@ -25,7 +26,7 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock} = useUser();
+  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock,loading} = useUser();
 const cities = {
     Kenya: ["Nairobi", "Mombasa", "Kisumu"],
     Congo: ["Kinshasa", "Goma", "Lubumbashi"]
@@ -71,7 +72,9 @@ const [apiCallInProgress,setApiCallInProgress] =useState(false)
 const [isSubmit, setIsSubmit] = useState(false)
 const [isSuccess,setIsSuccess]=useState(false)
 const base64Header = "data:image/jpeg;base64,";
+
 // console.log(photoBase64);
+
 
 
 const handleLivestockSubmit = async () => {
@@ -104,7 +107,6 @@ const apidata ={
         lastName,
         phone,
         gender,
-        dob,
         country,
         city,
         nationalId,
@@ -124,10 +126,9 @@ const apidata ={
         
 } 
 
-const handlefarmerRegister =async()=>{
-validateStep()
-
-await handleFarmerForm(apidata)
+const handlefarmerRegister =()=>{
+  if(!validateStep()) return;
+handleFarmerForm(apidata)
   
 }
 
@@ -182,7 +183,9 @@ const validateStep = () => {
   return Object.keys(newErrors).length === 0;
 };
 
-
+if(loading){
+  return   <LoadingSpinner size="large" color="#2e7d32" />
+}
 
   const nextStep = () => {
     if (validateStep()) setStep(step + 1);
@@ -302,6 +305,7 @@ const validateStep = () => {
                             writeToRecord(humanEnrollAPIResponse);
                             setIsSuccess(true);
                             Alert.alert("Enrolled successfully")
+                            setStep(2)
                             // setShowEnrolledMessage(true);
                             }
                         }

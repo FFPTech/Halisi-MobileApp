@@ -111,9 +111,9 @@ const [box, setBox] = useState([
 
     try {
       await GoogleSignin.hasPlayServices();
+      setLoading(true)
       const result = await GoogleSignin.signIn();
 
-      setLoading(true)
       const profile = result.data.user;
       const userData = {
         email: profile.email,
@@ -157,6 +157,7 @@ const [box, setBox] = useState([
       setLoading(false)
     } finally {
       setSigningIn(false);
+      setLoading(false)
     }
   };
 
@@ -206,17 +207,29 @@ const handleFarmerForm =async(apidata)=>{
         agent_id:agent.agent_id,
         institution_id:agent.company_id
     }
+    console.log(data);
+    
     try {
+      setLoading(true)
       
       const response = await axios.post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer",data)
   
       const res =response.data
       console.log(res);
+      setLoading(false)
       if(res.success){
           Alert.alert("Successfully registered")
       }
     } catch (error) {
+      setLoading(false)
+      
       console.log("There was an error",error);
+      console.log("There was an error", error);
+
+  Alert.alert(
+    "There was an error",
+    error?.response?.data?.message || error.message || "Something went wrong"
+  );
       
     }
     
@@ -238,6 +251,7 @@ const registerLivestockTag = async(livestockTagNumber)=>{
             identifier:'N/A',
             signature:'N/A'
         }
+        Alert.alert("Livestock registered successfully")
         console.log(response);
         //save it in state
 

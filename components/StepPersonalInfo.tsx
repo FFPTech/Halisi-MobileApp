@@ -270,7 +270,7 @@ export default function StepPersonalInfo({
         />
       </View>
       <View style={{flex:1,justifyContent:'center',alignContent:'center'}}>
-        <CommonButton title="Register" onPress={handleFarmerSubmit}/>
+        <CommonButton title="Register" onPress={()=>handleFarmerSubmit()}/>
       </View>
     </FormStepWrapper>
   );
