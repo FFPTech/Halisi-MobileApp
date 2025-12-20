@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Ellipse, Mask, Rect } from "react-native-svg";
+import Svg, { Ellipse, Mask, Polygon, Rect } from "react-native-svg";
 import { useUser } from "../Hooks/useUserGlobal";
 import CommonButton from "./CommonButtonComponent";
 import FormStepWrapper from "./FormStepWrapper";
@@ -39,7 +39,7 @@ export default function StepCamera({
   onpress,
 }: any) {
   const [container, setContainer] = useState({ w: 0, h: 0 });
-  const { box, setBox } = useUser(); // [x, y, w, h]
+  const { box, setBox } = useUser();
   const [x0, y0, w0, h0] = box;
   const [mode, setMode] = useState<null | "move" | "tl" | "br">(null);
 
@@ -54,10 +54,10 @@ export default function StepCamera({
 
     onPanResponderGrant: (e) => {
       const { locationX, locationY } = e.nativeEvent;
-      const l = x0;
-      const r = x0 + w0;
-      const t = y0;
-      const b = y0 + h0;
+      const l = x0,
+        r = x0 + w0,
+        t = y0,
+        b = y0 + h0;
 
       const hit = (x: number, y: number) =>
         Math.abs(locationX - x) < HANDLE_TOUCH / 2 &&
@@ -157,10 +157,13 @@ export default function StepCamera({
               facing={facing}
               mirror
             />
-            <MaskOverlay species={species} w={container.w} h={container.h} />
+            <MaskOverlay
+              species={species}
+              w={container.w}
+              h={container.h}
+            />
           </View>
 
-          {/* ✅ CONTROL BAR (STREAM BUTTON RESTORED) */}
           <View style={styles.controlBar}>
             <TouchableOpacity onPress={toggleCameraFacing}>
               <Ionicons name="camera-reverse" size={32} color="#2e7d32" />
@@ -187,7 +190,6 @@ export default function StepCamera({
                 { left: x0, top: y0, width: w0, height: h0 },
               ]}
             >
-              {/* 🔴 TOP LEFT HANDLE */}
               <View
                 style={[
                   styles.handleWrapper,
@@ -197,7 +199,6 @@ export default function StepCamera({
                 <View style={styles.redOutlineHandle} />
               </View>
 
-              {/* 🔴 BOTTOM RIGHT HANDLE */}
               <View
                 style={[
                   styles.handleWrapper,
@@ -224,29 +225,75 @@ export default function StepCamera({
 }
 
 /* ==========================
-   MASK OVERLAY (OVAL)
+   MASK OVERLAYS
 ========================== */
 function MaskOverlay({ species, w, h }: any) {
-  if (!w || !h || species !== "farmer") return null;
+  if (!w || !h) return null;
 
-  return (
-    <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
-      <Mask id="mask">
-        <Rect width={w} height={h} fill="white" />
+  if (species === "farmer") {
+    return (
+      <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
+        <Mask id="oval">
+          <Rect width={w} height={h} fill="white" />
+          <Ellipse
+            cx={w / 2}
+            cy={h / 2}
+            rx={w * 0.28}
+            ry={h * 0.42}
+            fill="black"
+          />
+        </Mask>
+        <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#oval)" />
         <Ellipse
           cx={w / 2}
           cy={h / 2}
           rx={w * 0.28}
           ry={h * 0.42}
-          fill="black"
+          stroke="limegreen"
+          strokeWidth={3}
+          fill="none"
         />
+      </Svg>
+    );
+  }
+
+  /* 🐄 LIVESTOCK TRAPEZOID */
+  const topW = w * 0.6;
+  const bottomW = w * 0.4;
+  const height = h * 0.75;
+  const cx = w / 2;
+  const topY = h * 0.1;
+  const bottomY = topY + height;
+
+  const points = `
+    ${cx - topW / 2},${topY}
+    ${cx + topW / 2},${topY}
+    ${cx + bottomW / 2},${bottomY}
+    ${cx - bottomW / 2},${bottomY}
+  `;
+
+  return (
+    <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
+      <Mask id="trap">
+        <Rect width={w} height={h} fill="white" />
+        <Polygon points={points} fill="black" />
       </Mask>
-      <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#mask)" />
+
+      <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#trap)" />
+
+      <Polygon
+        points={points}
+        stroke="limegreen"
+        strokeWidth={3}
+        fill="none"
+      />
+
+      {/* Internal guide circle */}
       <Ellipse
-        cx={w / 2}
-        cy={h / 2}
-        rx={w * 0.28}
-        ry={h * 0.42}
+        cx={cx}
+        cy={bottomY - height * 0.25}
+        rx={w * 0.05}
+        ry={w * 0.05}
         stroke="limegreen"
         strokeWidth={3}
         fill="none"
@@ -275,7 +322,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     borderWidth: 3,
     borderColor: "limegreen",
-    backgroundColor: "rgba(0,0,0,0.01)",
   },
 
   handleWrapper: {
@@ -290,9 +336,9 @@ const styles = StyleSheet.create({
     width: HANDLE_SIZE,
     height: HANDLE_SIZE,
     borderRadius: HANDLE_SIZE / 2,
-    backgroundColor: "transparent",
     borderWidth: 3,
     borderColor: "red",
+    backgroundColor: "transparent",
   },
 
   retakeBtn: {
@@ -303,8 +349,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  retakeText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  retakeText: { color: "#fff", fontWeight: "600" },
 });
