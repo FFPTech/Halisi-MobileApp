@@ -15,9 +15,10 @@ import {
 import axios from "axios";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { MultiStepComponent } from "../../components/MultiStep";
+import RatingScreen from "../../components/Ratings";
 import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
+import StepLivestock from "../../components/StepLivestock";
 import StepNationalId from "../../components/StepNationalID";
-import StepOperation from "../../components/StepOperation";
 import StepPersonalInfo from "../../components/StepPersonalInfo";
 import { useUser } from "../../Hooks/useUserGlobal";
 
@@ -26,7 +27,7 @@ const logoAsset = require("../../assets/images/halisi-logo.png");
 
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock,loading} = useUser();
+  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock,loading,ratings,farmerImg,setFarmerImg,farmerPayload,setFarmerPayload} = useUser();
 const cities = {
     Kenya: ["Nairobi", "Mombasa", "Kisumu"],
     Congo: ["Kinshasa", "Goma", "Lubumbashi"]
@@ -72,10 +73,13 @@ const [apiCallInProgress,setApiCallInProgress] =useState(false)
 const [isSubmit, setIsSubmit] = useState(false)
 const [isSuccess,setIsSuccess]=useState(false)
 const base64Header = "data:image/jpeg;base64,";
+const [showOperation,setShowOperation]=useState(false)
 
 // console.log(photoBase64);
 
-
+if(ratings){
+  return <RatingScreen/>
+}
 
 const handleLivestockSubmit = async () => {
   if (!livestockTag.trim()) {
@@ -129,7 +133,7 @@ const apidata ={
 const handlefarmerRegister =()=>{
   if(!validateStep()) return;
 handleFarmerForm(apidata)
-  
+setShowOperation(true);
 }
 
 
@@ -188,11 +192,16 @@ if(loading){
 }
 
   const nextStep = () => {
-    if (validateStep()) setStep(step + 1);
+    if (validateStep()){
+      if(step ===2){ 
+        setShowOperation(true);
+      } else {
+        setStep(step + 1);
+      } 
+    };
   };
   const handleSubmit = () => {
         setApiCallInProgress(true);
-        
         setIsSubmit(true);
         console.log("Hello");
         // console.log("No photo",photoBase64);
@@ -228,6 +237,7 @@ if(loading){
                         // calling performance metrics API function
                         callPerformanceMetrics("verify", humanVerifyAPIResponse);
                         setApiCallInProgress(false);
+                        setPhotoUri(base64Header + humanVerifyAPIResponse.image);
                         // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
                         // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
                         // let t1 = performance.now();
@@ -235,6 +245,7 @@ if(loading){
                         // setTotalEnrollTimeFarmer(total);
                         if (humanVerifyAPIResponse.match === false) {
                             // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setPhotoUri(base64Header + humanVerifyAPIResponse.image);
                             setApiCallInProgress(false);
                             // setSuccessfulAPIcall(true);
                             setIsSuccess( false);
@@ -242,6 +253,7 @@ if(loading){
                         }
                         else if (humanVerifyAPIResponse.match === true) {
                             // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+                            setPhotoUri(base64Header + humanVerifyAPIResponse.image);
                             setApiCallInProgress(false);
                             // setSuccessfulAPIcall(true);
                             setIsSuccess(true);
@@ -304,8 +316,8 @@ if(loading){
                             // setSuccessfulAPIcall(true);
                             writeToRecord(humanEnrollAPIResponse);
                             setIsSuccess(true);
-                            Alert.alert("Enrolled successfully")
-                            setStep(2)
+                            Alert.alert(data.data.message);
+                            setStep(2) 
                             // setShowEnrolledMessage(true);
                             }
                         }
@@ -323,7 +335,6 @@ if(loading){
                   }
               }
         };
-
 
 
        const handleSubmitLivestock = () => {
@@ -417,12 +428,14 @@ if(loading){
                         
                         callPerformanceMetrics("enroll", humanEnrollAPIResponse);
                         // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
-                        // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
+                        setPhotoUri(base64Header + humanEnrollAPIResponse.image);
+                        Alert.alert(data.data.message)
                         // let t1 = performance.now();
                         // let total = parseInt(t1 - t0);
                         // setTotalEnrollTimeFarmer(total);
                         if (humanEnrollAPIResponse.dedup_result === true) {
                             // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                            setFarmerImg(null);
                             setApiCallInProgress(false);
                             // setSuccessfulAPIcall(true);
                             setIsSuccess(false);
@@ -436,11 +449,12 @@ if(loading){
                             }
                             else{
                             //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
+                            setPhotoUri(base64Header + humanEnrollAPIResponse.image);
                             setApiCallInProgress(false);
                             // setSuccessfulAPIcall(true);
                             writeToRecord(humanEnrollAPIResponse);
                             setIsSuccess(true);
-                            Alert.alert("Enrolled successfully")
+                            Alert.alert(data.data.message)
                             // setShowEnrolledMessage(true);
                             }
                         }
@@ -805,8 +819,12 @@ if(loading){
       setFarmerKRApin={setFarmerKRApin}
       errors={errors} 
       handleFarmerSubmit ={handlefarmerRegister}
+      nextStep={nextStep}
+      operation={operation}
+      setShowOperation={setShowOperation}
       
     />
+
       );
 
       case 3:
@@ -814,23 +832,36 @@ if(loading){
 
         return (
          
-          <StepOperation
+//           <StepOperation
           
-           livestocktag={livestockTag}
+//            livestocktag={livestockTag}
+//               setLivestockTag={setLivestockTag}
+//               errors={errors}
+//               permission={permission}
+//               livestockPhotoUri={livestockPhotoUri}
+//               setLivestockPhotoUri={setLivestockPhotoUri}
+//               setPhotoBase64s={setPhotoBase64}
+//               requestPermission={requestPermission}
+//               facing={facing}
+//               toggleCameraFacing={toggleCameraFacing}
+//               cameraRef={cameraRef}
+//               nextStep={nextStep}
+// handleSubmitLivestock={handleSubmitLivestock}
+
+//      />
+<StepLivestock nextStep={nextStep}
+              livestocktag={livestockTag}
               setLivestockTag={setLivestockTag}
               errors={errors}
               permission={permission}
-              livestockPhotoUri={livestockPhotoUri}
-              setLivestockPhotoUri={setLivestockPhotoUri}
-              setPhotoBase64s={setPhotoBase64}
-              requestPermission={requestPermission}
-              facing={facing}
-              toggleCameraFacing={toggleCameraFacing}
-              cameraRef={cameraRef}
-              nextStep={nextStep}
-handleSubmitLivestock={handleSubmitLivestock}
-
-      />
+          requestPermission={requestPermission}
+          livestockPhotoUri={livestockPhotoUri}
+          setLivestockPhotoUri={setLivestockPhotoUri}
+          cameraRef={cameraRef}
+          facing={facing}
+          toggleCameraFacing={toggleCameraFacing}
+          setPhotoBase64={setPhotoBase64}
+          handleSubmitLivestock={handleSubmitLivestock}/>
         );
         ;
 

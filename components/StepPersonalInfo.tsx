@@ -1,14 +1,17 @@
 // components/steps/StepPersonalInfo.tsx
 import { Text, View, } from "react-native";
+import { useUser } from "../Hooks/useUserGlobal";
 import CommonButton from "./CommonButtonComponent";
 import Dropdown from "./DropDown";
 import FormStepWrapper from "./FormStepWrapper";
 import InputField from "./InputComponent";
+import StepOperation from "./StepOperation";
 
 const cities = {
   Kenya: ["Nairobi", "Mombasa", "Kisumu"],
   Congo: ["Kinshasa", "Goma", "Lubumbashi"],
 };
+
 
 export default function StepPersonalInfo({
   firstName,
@@ -48,12 +51,17 @@ export default function StepPersonalInfo({
   farmerKRAPin,
   setFarmerKRApin,
   handleFarmerSubmit,
-
-  // 🔥 ADD THIS
+  nextStep,
+  setShowOperation,
+  operation,
   errors ,
 }) {
+
+  const{showOperation} =useUser()
   return (
-    <FormStepWrapper title="Step 3: Personal Information">
+    <>
+  {
+    showOperation?<StepOperation nextStep={nextStep} />:<FormStepWrapper title="Step 3: Personal Information">
       <View style={{ marginTop: 4, flexDirection: "column", gap: 12 }}>
         {/* -------------------- FIRST NAME -------------------- */}
         <InputField
@@ -143,6 +151,7 @@ export default function StepPersonalInfo({
           value={monthlyIncome}
           onChangeText={setMonthlyIncome}
           error={errors.monthlyIncome}
+          numbersOnly 
         />
 
         {/* -------------------- COOPERATIVE -------------------- */}
@@ -259,6 +268,7 @@ export default function StepPersonalInfo({
           value={annualIncome}
           onChangeText={setAnnualIncome}
           error={errors.annualIncome}
+          numbersOnly
         />
 
         {/* -------------------- KRA PIN -------------------- */}
@@ -273,5 +283,8 @@ export default function StepPersonalInfo({
         <CommonButton title="Register" onPress={()=>handleFarmerSubmit()}/>
       </View>
     </FormStepWrapper>
+  } 
+    </>
+
   );
 }

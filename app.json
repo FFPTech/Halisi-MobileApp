@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Halisi-Mobile-app",
+    "name": "Halisi-Livestock",
     "slug": "Halisi-Mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -85,6 +85,6 @@
          "projectId": "dc5d0ede-2c65-4289-8ccc-f5b732733cca"
       }
     },
-    "owner": "deevyne99"
+    "owner": "neotex-ai"
   }
 }

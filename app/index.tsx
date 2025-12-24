@@ -3,8 +3,6 @@ import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { Image, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CommonButton from "../components/CommonButtonComponent";
-import InputComponent from "../components/InputComponent";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { users } from "../data/user";
 import { useUser } from "../Hooks/useUserGlobal";
@@ -52,30 +50,10 @@ if(loading){return <LoadingSpinner size="large" color=" #2e7d32" />}
     <View style={styles.container}>
       <Image source={require('../assets/images/halisi-logo.png')} style={styles.logo} resizeMode="contain" />
 
-      <InputComponent
-        label="email"
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-
-      <InputComponent
-        label="password"
-        placeholder="Enter your password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <View style={styles.buttonContainer}>
-        <CommonButton title="Login" onPress={()=>router.replace("/FillForm")} />
-      </View>
-      <View>
 
         <GoogleSigninButton size={GoogleSigninButton.Size.Wide}  color={GoogleSigninButton.Color.Light} style={{width:212,height:48}} onPress={handleSignIn}/>
       </View>
-    </View>
+    
     </SafeAreaView>
   );
 }

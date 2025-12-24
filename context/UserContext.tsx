@@ -78,6 +78,10 @@ const [box, setBox] = useState([
      240,
      240,
   ]);
+  const [ratings, setRatings] = useState(false);
+  const [showOperation, setShowOperation] = useState(false);
+  const [farmerImg,setFarmerImg]= useState(null)
+  const [farmerPayload,setFarmerPayload]= useState({})
  
 
   // ---------------------------
@@ -496,7 +500,10 @@ const callPerformanceMetrics = async (type, response) => {
         box,setBox,operation,
         handleFarmerForm,
         callPerformanceMetricsForLivestock,
-        registerLivestockTag
+        registerLivestockTag,
+        ratings,setRatings,
+        farmerImg,setFarmerImg,
+        farmerPayload,setFarmerPayload,
       }}
     >
       {children}

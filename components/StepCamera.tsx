@@ -157,11 +157,8 @@ export default function StepCamera({
               facing={facing}
               mirror
             />
-            <MaskOverlay
-              species={species}
-              w={container.w}
-              h={container.h}
-            />
+
+            <MaskOverlay species={species} w={container.w} h={container.h} />
           </View>
 
           <View style={styles.controlBar}>
@@ -183,31 +180,34 @@ export default function StepCamera({
           <View style={styles.photoWrapper}>
             <Image source={{ uri: photoUri }} style={styles.photoPreview} />
 
-            <View
-              {...panResponder.panHandlers}
-              style={[
-                styles.boundingBox,
-                { left: x0, top: y0, width: w0, height: h0 },
-              ]}
-            >
+            {/* ✅ Bounding box ONLY for livestock */}
+            {species !== "farmer" && (
               <View
+                {...panResponder.panHandlers}
                 style={[
-                  styles.handleWrapper,
-                  { left: -HANDLE_TOUCH / 2, top: -HANDLE_TOUCH / 2 },
+                  styles.boundingBox,
+                  { left: x0, top: y0, width: w0, height: h0 },
                 ]}
               >
-                <View style={styles.redOutlineHandle} />
-              </View>
+                <View
+                  style={[
+                    styles.handleWrapper,
+                    { left: -HANDLE_TOUCH / 2, top: -HANDLE_TOUCH / 2 },
+                  ]}
+                >
+                  <View style={styles.redOutlineHandle} />
+                </View>
 
-              <View
-                style={[
-                  styles.handleWrapper,
-                  { right: -HANDLE_TOUCH / 2, bottom: -HANDLE_TOUCH / 2 },
-                ]}
-              >
-                <View style={styles.redOutlineHandle} />
+                <View
+                  style={[
+                    styles.handleWrapper,
+                    { right: -HANDLE_TOUCH / 2, bottom: -HANDLE_TOUCH / 2 },
+                  ]}
+                >
+                  <View style={styles.redOutlineHandle} />
+                </View>
               </View>
-            </View>
+            )}
           </View>
 
           <TouchableOpacity
@@ -243,7 +243,10 @@ function MaskOverlay({ species, w, h }: any) {
             fill="black"
           />
         </Mask>
+
         <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#oval)" />
+
+        {/* ❌ No green box for farmer */}
         <Ellipse
           cx={w / 2}
           cy={h / 2}
@@ -288,7 +291,6 @@ function MaskOverlay({ species, w, h }: any) {
         fill="none"
       />
 
-      {/* Internal guide circle */}
       <Ellipse
         cx={cx}
         cy={bottomY - height * 0.25}
