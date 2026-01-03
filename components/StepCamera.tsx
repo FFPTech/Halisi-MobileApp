@@ -1,7 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { CameraView } from "expo-camera";
-import * as ImageManipulator from "expo-image-manipulator";
-import React, { useState } from "react";
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { CameraView } from 'expo-camera'
+import * as ImageManipulator from 'expo-image-manipulator'
+import React, { useState } from 'react'
 import {
   Alert,
   Image,
@@ -10,18 +10,18 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import Svg, { Ellipse, Mask, Polygon, Rect } from "react-native-svg";
-import { useUser } from "../Hooks/useUserGlobal";
-import CommonButton from "./CommonButtonComponent";
-import FormStepWrapper from "./FormStepWrapper";
+} from 'react-native'
+import Svg, { Ellipse, Mask, Polygon, Rect } from 'react-native-svg'
+import { useUser } from '../Hooks/useUserGlobal'
+import CommonButton from './CommonButtonComponent'
+import FormStepWrapper from './FormStepWrapper'
 
 /* ==========================
    CONSTANTS
 ========================== */
-const HANDLE_SIZE = 18;
-const HANDLE_TOUCH = 32;
-const MIN_SIZE = 120;
+const HANDLE_SIZE = 18
+const HANDLE_TOUCH = 32
+const MIN_SIZE = 120
 
 /* ==========================
    MAIN COMPONENT
@@ -38,13 +38,13 @@ export default function StepCamera({
   species,
   onpress,
 }: any) {
-  const [container, setContainer] = useState({ w: 0, h: 0 });
-  const { box, setBox } = useUser();
-  const [x0, y0, w0, h0] = box;
-  const [mode, setMode] = useState<null | "move" | "tl" | "br">(null);
+  const [container, setContainer] = useState({ w: 0, h: 0 })
+  const { box, setBox } = useUser()
+  const [x0, y0, w0, h0] = box
+  const [mode, setMode] = useState<null | 'move' | 'tl' | 'br'>(null)
 
   const clamp = (v: number, min: number, max: number) =>
-    Math.max(min, Math.min(v, max));
+    Math.max(min, Math.min(v, max))
 
   /* ==========================
      PAN RESPONDER
@@ -53,25 +53,25 @@ export default function StepCamera({
     onStartShouldSetPanResponder: () => true,
 
     onPanResponderGrant: (e) => {
-      const { locationX, locationY } = e.nativeEvent;
+      const { locationX, locationY } = e.nativeEvent
       const l = x0,
         r = x0 + w0,
         t = y0,
-        b = y0 + h0;
+        b = y0 + h0
 
       const hit = (x: number, y: number) =>
         Math.abs(locationX - x) < HANDLE_TOUCH / 2 &&
-        Math.abs(locationY - y) < HANDLE_TOUCH / 2;
+        Math.abs(locationY - y) < HANDLE_TOUCH / 2
 
-      if (hit(l, t)) setMode("tl");
-      else if (hit(r, b)) setMode("br");
+      if (hit(l, t)) setMode('tl')
+      else if (hit(r, b)) setMode('br')
       else if (
         locationX > l &&
         locationX < r &&
         locationY > t &&
         locationY < b
       ) {
-        setMode("move");
+        setMode('move')
       }
     },
 
@@ -80,40 +80,40 @@ export default function StepCamera({
         let nx = x,
           ny = y,
           nw = w,
-          nh = h;
+          nh = h
 
-        if (mode === "move") {
-          nx = clamp(x + g.dx, 0, container.w - w);
-          ny = clamp(y + g.dy, 0, container.h - h);
+        if (mode === 'move') {
+          nx = clamp(x + g.dx, 0, container.w - w)
+          ny = clamp(y + g.dy, 0, container.h - h)
         }
 
-        if (mode === "tl") {
-          const lx = clamp(x + g.dx, 0, x + w - MIN_SIZE);
-          const ty = clamp(y + g.dy, 0, y + h - MIN_SIZE);
-          nw -= lx - x;
-          nh -= ty - y;
-          nx = lx;
-          ny = ty;
+        if (mode === 'tl') {
+          const lx = clamp(x + g.dx, 0, x + w - MIN_SIZE)
+          const ty = clamp(y + g.dy, 0, y + h - MIN_SIZE)
+          nw -= lx - x
+          nh -= ty - y
+          nx = lx
+          ny = ty
         }
 
-        if (mode === "br") {
-          nw = clamp(w + g.dx, MIN_SIZE, container.w - x);
-          nh = clamp(h + g.dy, MIN_SIZE, container.h - y);
+        if (mode === 'br') {
+          nw = clamp(w + g.dx, MIN_SIZE, container.w - x)
+          nh = clamp(h + g.dy, MIN_SIZE, container.h - y)
         }
 
-        return [nx, ny, nw, nh];
-      });
+        return [nx, ny, nw, nh]
+      })
     },
 
     onPanResponderRelease: () => setMode(null),
-  });
+  })
 
   /* ==========================
      CAMERA
   =========================== */
   const takePicture = async () => {
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 })
       const resized = await ImageManipulator.manipulateAsync(
         photo.uri,
         [{ resize: { width: 1200 } }],
@@ -122,24 +122,24 @@ export default function StepCamera({
           format: ImageManipulator.SaveFormat.JPEG,
           base64: true,
         }
-      );
-      setPhotoUri(resized.uri);
-      setPhotoBase64(resized.base64 ?? null);
+      )
+      setPhotoUri(resized.uri)
+      setPhotoBase64(resized.base64 ?? null)
     } catch {
-      Alert.alert("Camera error", "Failed to capture image");
+      Alert.alert('Camera error', 'Failed to capture image')
     }
-  };
+  }
 
   if (!permission.granted) {
     return (
-      <FormStepWrapper title="Capture Photo">
-        <CommonButton title="Grant Permission" onPress={requestPermission} />
+      <FormStepWrapper title='Capture Photo'>
+        <CommonButton title='Grant Permission' onPress={requestPermission} />
       </FormStepWrapper>
-    );
+    )
   }
 
   return (
-    <FormStepWrapper title="Capture Photo">
+    <FormStepWrapper title='Capture Photo'>
       {!photoUri ? (
         <>
           <View
@@ -163,15 +163,15 @@ export default function StepCamera({
 
           <View style={styles.controlBar}>
             <TouchableOpacity onPress={toggleCameraFacing}>
-              <Ionicons name="camera-reverse" size={32} color="#2e7d32" />
+              <Ionicons name='camera-reverse' size={32} color='#2e7d32' />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={takePicture}>
-              <Ionicons name="camera" size={38} color="#2e7d32" />
+              <Ionicons name='camera' size={38} color='#2e7d32' />
             </TouchableOpacity>
 
             <TouchableOpacity>
-              <Ionicons name="videocam" size={32} color="#2e7d32" />
+              <Ionicons name='videocam' size={32} color='#2e7d32' />
             </TouchableOpacity>
           </View>
         </>
@@ -181,7 +181,7 @@ export default function StepCamera({
             <Image source={{ uri: photoUri }} style={styles.photoPreview} />
 
             {/* ✅ Bounding box ONLY for livestock */}
-            {species !== "farmer" && (
+            {species !== 'farmer' && (
               <View
                 {...panResponder.panHandlers}
                 style={[
@@ -218,33 +218,34 @@ export default function StepCamera({
           </TouchableOpacity>
         </>
       )}
-
-      <CommonButton title="Enroll" onPress={onpress} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <CommonButton title='Enroll' onPress={onpress} />
+      </View>
     </FormStepWrapper>
-  );
+  )
 }
 
 /* ==========================
    MASK OVERLAYS
 ========================== */
 function MaskOverlay({ species, w, h }: any) {
-  if (!w || !h) return null;
+  if (!w || !h) return null
 
-  if (species === "farmer") {
+  if (species === 'farmer') {
     return (
       <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
-        <Mask id="oval">
-          <Rect width={w} height={h} fill="white" />
+        <Mask id='oval'>
+          <Rect width={w} height={h} fill='white' />
           <Ellipse
             cx={w / 2}
             cy={h / 2}
             rx={w * 0.28}
             ry={h * 0.42}
-            fill="black"
+            fill='black'
           />
         </Mask>
 
-        <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#oval)" />
+        <Rect width={w} height={h} fill='rgba(0,0,0,0.6)' mask='url(#oval)' />
 
         {/* ❌ No green box for farmer */}
         <Ellipse
@@ -252,86 +253,81 @@ function MaskOverlay({ species, w, h }: any) {
           cy={h / 2}
           rx={w * 0.28}
           ry={h * 0.42}
-          stroke="limegreen"
+          stroke='limegreen'
           strokeWidth={3}
-          fill="none"
+          fill='none'
         />
       </Svg>
-    );
+    )
   }
 
   /* 🐄 LIVESTOCK TRAPEZOID */
-  const topW = w * 0.6;
-  const bottomW = w * 0.4;
-  const height = h * 0.75;
-  const cx = w / 2;
-  const topY = h * 0.1;
-  const bottomY = topY + height;
+  const topW = w * 0.6
+  const bottomW = w * 0.4
+  const height = h * 0.75
+  const cx = w / 2
+  const topY = h * 0.1
+  const bottomY = topY + height
 
   const points = `
     ${cx - topW / 2},${topY}
     ${cx + topW / 2},${topY}
     ${cx + bottomW / 2},${bottomY}
     ${cx - bottomW / 2},${bottomY}
-  `;
+  `
 
   return (
     <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
-      <Mask id="trap">
-        <Rect width={w} height={h} fill="white" />
-        <Polygon points={points} fill="black" />
+      <Mask id='trap'>
+        <Rect width={w} height={h} fill='white' />
+        <Polygon points={points} fill='black' />
       </Mask>
 
-      <Rect width={w} height={h} fill="rgba(0,0,0,0.6)" mask="url(#trap)" />
+      <Rect width={w} height={h} fill='rgba(0,0,0,0.6)' mask='url(#trap)' />
 
-      <Polygon
-        points={points}
-        stroke="limegreen"
-        strokeWidth={3}
-        fill="none"
-      />
+      <Polygon points={points} stroke='limegreen' strokeWidth={3} fill='none' />
 
       <Ellipse
         cx={cx}
         cy={bottomY - height * 0.25}
         rx={w * 0.05}
         ry={w * 0.05}
-        stroke="limegreen"
+        stroke='limegreen'
         strokeWidth={3}
-        fill="none"
+        fill='none'
       />
     </Svg>
-  );
+  )
 }
 
 /* ==========================
    STYLES
 ========================== */
 const styles = StyleSheet.create({
-  cameraContainer: { width: "100%", height: 300 },
-  cameraBox: { width: "100%", height: "100%" },
+  cameraContainer: { width: '100%', height: 300 },
+  cameraBox: { width: '100%', height: '100%' },
 
   controlBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     padding: 12,
   },
 
-  photoWrapper: { width: "100%", height: 300 },
-  photoPreview: { width: "100%", height: "100%" },
+  photoWrapper: { width: '100%', height: 300 },
+  photoPreview: { width: '100%', height: '100%' },
 
   boundingBox: {
-    position: "absolute",
+    position: 'absolute',
     borderWidth: 3,
-    borderColor: "limegreen",
+    borderColor: 'limegreen',
   },
 
   handleWrapper: {
-    position: "absolute",
+    position: 'absolute',
     width: HANDLE_TOUCH,
     height: HANDLE_TOUCH,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   redOutlineHandle: {
@@ -339,17 +335,17 @@ const styles = StyleSheet.create({
     height: HANDLE_SIZE,
     borderRadius: HANDLE_SIZE / 2,
     borderWidth: 3,
-    borderColor: "red",
-    backgroundColor: "transparent",
+    borderColor: 'red',
+    backgroundColor: 'transparent',
   },
 
   retakeBtn: {
     marginTop: 12,
-    backgroundColor: "#2e7d32",
+    backgroundColor: '#2e7d32',
     padding: 12,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
-  retakeText: { color: "#fff", fontWeight: "600" },
-});
+  retakeText: { color: '#fff', fontWeight: '600' },
+})

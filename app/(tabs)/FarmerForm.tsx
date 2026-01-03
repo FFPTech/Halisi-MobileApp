@@ -1,488 +1,517 @@
-import {
-  CameraType,
-  useCameraPermissions
-} from "expo-camera";
-import React, { useRef, useState } from "react";
+import { CameraType, useCameraPermissions } from 'expo-camera'
+import React, { useRef, useState } from 'react'
 import {
   Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
-} from "react-native";
+  View,
+} from 'react-native'
 
-import axios from "axios";
-import LoadingSpinner from "../../components/LoadingSpinner";
-import { MultiStepComponent } from "../../components/MultiStep";
-import RatingScreen from "../../components/Ratings";
-import { RegisterAnotherLivestockScreen } from "../../components/RegisterLiveStock";
-import StepLivestock from "../../components/StepLivestock";
-import StepNationalId from "../../components/StepNationalID";
-import StepPersonalInfo from "../../components/StepPersonalInfo";
-import { useUser } from "../../Hooks/useUserGlobal";
+import axios from 'axios'
+import { AppModal } from '../../components/AppModal'
+import LoadingSpinner from '../../components/LoadingSpinner'
+import { MultiStepComponent } from '../../components/MultiStep'
+import RatingScreen from '../../components/Ratings'
+import { RegisterAnotherLivestockScreen } from '../../components/RegisterLiveStock'
+import StepLivestock from '../../components/StepLivestock'
+import StepNationalId from '../../components/StepNationalID'
+import StepPersonalInfo from '../../components/StepPersonalInfo'
+import { useUser } from '../../Hooks/useUserGlobal'
 
 // bundled logo asset
-const logoAsset = require("../../assets/images/halisi-logo.png");
-
+const logoAsset = require('../../assets/images/halisi-logo.png')
 
 export default function RegisterFarmers() {
-  const { saveFarmer,saveLivestock,registerNewLivestock,step,setStep,agent,callPerformanceMetrics,farmerData, writeToRecord,box,operation,handleFarmerForm,callPerformanceMetricsForLivestock,loading,ratings,farmerImg,setFarmerImg,farmerPayload,setFarmerPayload} = useUser();
-const cities = {
-    Kenya: ["Nairobi", "Mombasa", "Kisumu"],
-    Congo: ["Kinshasa", "Goma", "Lubumbashi"]
-  };
+  const {
+    saveFarmer,
+    saveLivestock,
+    registerNewLivestock,
+    step,
+    setStep,
+    agent,
+    callPerformanceMetrics,
+    farmerData,
+    writeToRecord,
+    box,
+    operation,
+    handleFarmerForm,
+    callPerformanceMetricsForLivestock,
+    loading,
+    ratings,
+    farmerImg,
+    setFarmerImg,
+    farmerPayload,
+    setFarmerPayload,
+    messageDescription,
+    showModalNationalIdNotRegistered,
+  } = useUser()
+  const cities = {
+    Kenya: ['Nairobi', 'Mombasa', 'Kisumu'],
+    Congo: ['Kinshasa', 'Goma', 'Lubumbashi'],
+  }
 
-  
-  const totalSteps = 6;
-const [isEnabled, setIsEnabled] = useState(false);
-  const [facing, setFacing] = useState<CameraType>("back");
-  const [permission, requestPermission] = useCameraPermissions();
-  const cameraRef = useRef<any>(null);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const totalSteps = 6
+  const [isEnabled, setIsEnabled] = useState(false)
+  const [facing, setFacing] = useState<CameraType>('back')
+  const [permission, requestPermission] = useCameraPermissions()
+  const cameraRef = useRef<any>(null)
+  const [photoUri, setPhotoUri] = useState<string | null>(null)
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null)
 
   // Form data states
-  const [firstName, setFirstName] = useState("");
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("");
-  const [dob, setDob] = useState<Date | null>(null);
-  const [country, setCountry] = useState("");
-  const [city, setCity] = useState("");
-  const [email, setEmail] = useState("");
-  const [nationalId, setNationalId] = useState("");
-  const [address, setAddress] = useState("");
-  const [verify, setVerified] = useState(false);
-  const [monthlyIncome, setMonthlyIncome] = useState("");
-  const [isMemberCooperative, setIsMemberCooperative] = useState("");
+  const [firstName, setFirstName] = useState('')
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [lastName, setLastName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [gender, setGender] = useState('')
+  const [dob, setDob] = useState<Date | null>(null)
+  const [country, setCountry] = useState('')
+  const [city, setCity] = useState('')
+  const [email, setEmail] = useState('')
+  const [nationalId, setNationalId] = useState('')
+  const [address, setAddress] = useState('')
+  const [verify, setVerified] = useState(false)
+  const [monthlyIncome, setMonthlyIncome] = useState('')
+  const [isMemberCooperative, setIsMemberCooperative] = useState('')
 
-  const [nameOfCooperative, setNameOfCooperative] = useState("");
-  const [experience, setExperience] = useState();
-const [ageCategory, setAgeCategory] = useState();  
-const [schooling, setSchooling] = useState();
-const [accommodation, setAccommodation] = useState();
-const[residentialStatus,setResidentialStatus]=useState();
-const [tenureWithFinancialInstitution, setTenureWithFinancialInstitution] = useState();
-const [annualIncome, setAnnualIncome] = useState();
-const [farmerKRAPin, setFarmerKRApin] = useState("");
-const [livestockPhotoUri, setLivestockPhotoUri] = useState<string | null>(null);
-const [livestockTag, setLivestockTag] = useState("");
-const [apiCallInProgress,setApiCallInProgress] =useState(false)
-const [isSubmit, setIsSubmit] = useState(false)
-const [isSuccess,setIsSuccess]=useState(false)
-const base64Header = "data:image/jpeg;base64,";
-const [showOperation,setShowOperation]=useState(false)
+  const [nameOfCooperative, setNameOfCooperative] = useState('')
+  const [experience, setExperience] = useState()
+  const [ageCategory, setAgeCategory] = useState()
+  const [schooling, setSchooling] = useState()
+  const [accommodation, setAccommodation] = useState()
+  const [residentialStatus, setResidentialStatus] = useState()
+  const [tenureWithFinancialInstitution, setTenureWithFinancialInstitution] =
+    useState()
+  const [annualIncome, setAnnualIncome] = useState()
+  const [farmerKRAPin, setFarmerKRApin] = useState('')
+  const [livestockPhotoUri, setLivestockPhotoUri] = useState<string | null>(
+    null
+  )
+  const [livestockTag, setLivestockTag] = useState('')
+  const [apiCallInProgress, setApiCallInProgress] = useState(false)
+  const [isSubmit, setIsSubmit] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const base64Header = 'data:image/jpeg;base64,'
+  const [showOperation, setShowOperation] = useState(false)
 
-// console.log(photoBase64);
+  // console.log(photoBase64);
 
-if(ratings){
-  return <RatingScreen/>
-}
-
-const handleLivestockSubmit = async () => {
-  if (!livestockTag.trim()) {
-    Alert.alert("Error", "Livestock tag is required");
-    return;
+  if (ratings) {
+    return <RatingScreen />
   }
 
-  if (!livestockPhotoUri) {
-    Alert.alert("Error", "Please capture livestock photo");
-    return;
+  const handleLivestockSubmit = async () => {
+    if (!livestockTag.trim()) {
+      Alert.alert('Error', 'Livestock tag is required')
+      return
+    }
+
+    if (!livestockPhotoUri) {
+      Alert.alert('Error', 'Please capture livestock photo')
+      return
+    }
+
+    if (!nationalId) {
+      Alert.alert('Error', 'Missing farmer ID. Please restart process.')
+      return
+    }
+
+    await saveLivestock({
+      livestock_tag: livestockTag,
+      photo_uri: livestockPhotoUri,
+      farmer_id: nationalId, // <-- Automatically added!
+    })
+
+    Alert.alert('Success', 'Livestock registered successfully!')
   }
 
-  if (!nationalId) {
-    Alert.alert("Error", "Missing farmer ID. Please restart process.");
-    return;
+  const apidata = {
+    firstName,
+    lastName,
+    phone,
+    gender,
+    country,
+    city,
+    nationalId,
+    address,
+    verify,
+    monthlyIncome,
+    isMemberCooperative,
+    nameOfCooperative,
+    experience,
+    ageCategory,
+    schooling,
+    accommodation,
+    residentialStatus,
+    tenureWithFinancialInstitution,
+    annualIncome,
+    farmerKRAPin,
   }
 
-  await saveLivestock({
-    livestock_tag: livestockTag,
-    photo_uri: livestockPhotoUri,
-    farmer_id: nationalId,      // <-- Automatically added!
-  });
-
-  Alert.alert("Success", "Livestock registered successfully!");
-};
-
-const apidata ={
-  firstName,
-        lastName,
-        phone,
-        gender,
-        country,
-        city,
-        nationalId,
-        address,
-        verify,
-        monthlyIncome,
-        isMemberCooperative,
-        nameOfCooperative,
-        experience,
-        ageCategory,
-        schooling,
-        accommodation,
-        residentialStatus,
-        tenureWithFinancialInstitution,
-        annualIncome,
-        farmerKRAPin,
-        
-} 
-
-const handlefarmerRegister =()=>{
-  if(!validateStep()) return;
-handleFarmerForm(apidata)
-setShowOperation(true);
-}
-
-
-
+  const handlefarmerRegister = () => {
+    if (!validateStep()) return
+    handleFarmerForm(apidata)
+    setShowOperation(true)
+  }
 
   const toggleCameraFacing = () =>
-    setFacing((current) => (current === "back" ? "front" : "back"));
+    setFacing((current) => (current === 'back' ? 'front' : 'back'))
 
   // Capture photo
- 
 
   // Validation before moving to next step
-const validateStep = () => {
-  const newErrors: { [key: string]: string } = {};
+  const validateStep = () => {
+    const newErrors: { [key: string]: string } = {}
 
-  switch (step) {
-    case 1:
-      if (!nationalId?.trim()) newErrors.nationalId = "National ID is required";
-      if (!country?.trim()) newErrors.country = "Country is required";
-      if (!photoUri) newErrors.photoUri = "Profile photo is required";
-      break;
+    switch (step) {
+      case 1:
+        if (!nationalId?.trim())
+          newErrors.nationalId = 'National ID is required'
+        if (!country?.trim()) newErrors.country = 'Country is required'
+        if (!photoUri) newErrors.photoUri = 'Profile photo is required'
+        break
 
-    
+      case 2:
+        if (!firstName?.trim()) newErrors.firstName = 'First Name is required'
+        if (!lastName?.trim()) newErrors.lastName = 'Last Name is required'
 
-    case 2:
-      if (!firstName?.trim()) newErrors.firstName = "First Name is required";
-      if (!lastName?.trim()) newErrors.lastName = "Last Name is required";
+        if (!gender?.trim()) newErrors.gender = 'Gender is required'
+        if (!nationalId?.trim())
+          newErrors.nationalId = 'National ID is required'
+        if (!monthlyIncome?.trim())
+          newErrors.monthlyIncome = 'Monthly income is required'
 
-      if (!gender?.trim()) newErrors.gender = "Gender is required";
-      if (!nationalId?.trim()) newErrors.nationalId = "National ID is required";
-      if (!monthlyIncome?.trim()) newErrors.monthlyIncome = "Monthly income is required";
+        if (isMemberCooperative === 'Yes' && !nameOfCooperative?.trim())
+          newErrors.nameOfCooperative = 'Cooperative name is required'
 
-      if (isMemberCooperative === "Yes" && !nameOfCooperative?.trim())
-        newErrors.nameOfCooperative = "Cooperative name is required";
+        if (!experience) newErrors.experience = 'Experience is required'
+        if (!ageCategory) newErrors.ageCategory = 'Age category is required'
+        if (!schooling) newErrors.schooling = 'Schooling is required'
+        if (!accommodation)
+          newErrors.accommodation = 'Accommodation is required'
+        if (!residentialStatus)
+          newErrors.residentialStatus = 'Residential status is required'
+        if (!tenureWithFinancialInstitution)
+          newErrors.tenureWithFinancialInstitution = 'Tenure is required'
+        if (!annualIncome) newErrors.annualIncome = 'Annual income is required'
 
-      if (!experience) newErrors.experience = "Experience is required";
-      if (!ageCategory) newErrors.ageCategory = "Age category is required";
-      if (!schooling) newErrors.schooling = "Schooling is required";
-      if (!accommodation) newErrors.accommodation = "Accommodation is required";
-      if (!residentialStatus) newErrors.residentialStatus = "Residential status is required";
-      if (!tenureWithFinancialInstitution) newErrors.tenureWithFinancialInstitution = "Tenure is required";
-      if (!annualIncome) newErrors.annualIncome = "Annual income is required";
+        if (!farmerKRAPin?.trim())
+          newErrors.farmerKRAPin = 'KRA Pin is required'
 
-      if (!farmerKRAPin?.trim()) newErrors.farmerKRAPin = "KRA Pin is required";
-     
-  
-      break;
+        break
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
-
-if(loading){
-  return   <LoadingSpinner size="large" color="#2e7d32" />
-}
+  if (loading) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
 
   const nextStep = () => {
-    if (validateStep()){
-      if(step ===2){ 
-        setShowOperation(true);
+    if (validateStep()) {
+      if (step === 2) {
+        setShowOperation(true)
       } else {
-        setStep(step + 1);
-      } 
-    };
-  };
+        setStep(step + 1)
+      }
+    }
+  }
   const handleSubmit = () => {
-        setApiCallInProgress(true);
-        setIsSubmit(true);
-        console.log("Hello");
-        // console.log("No photo",photoBase64);
-        if (!photoBase64) {
-          console.log("No photo",photoBase64);
-          // photoBase64
-          
-          Alert.alert("Please take a picture")
-          setIsSuccess(false);
-          // Dispatch action to save res object
+    setApiCallInProgress(true)
+    setIsSubmit(true)
+    console.log('Hello')
+    // console.log("No photo",photoBase64);
+    if (!photoBase64) {
+      console.log('No photo', photoBase64)
+      // photoBase64
+
+      Alert.alert('Please take a picture')
+      setIsSuccess(false)
+      // Dispatch action to save res object
+    } else {
+      let rect = [
+        parseInt(box[0]),
+        parseInt(box[1]),
+        parseInt(box[2]),
+        parseInt(box[3]),
+      ]
+
+      if (operation !== 'register') {
+        let t0 = performance.now()
+        let data = {
+          agent_id: agent.agent_id,
+          institution_id: agent.institution_id,
+          image: photoBase64,
+          signature: farmerData.signature,
+          id: farmerData.id,
+          rect: rect,
+          moveable_rect: rect,
         }
-        else {
-            var rect = [parseInt(box[0]),parseInt(box[1]),parseInt(box[2]),parseInt(box[3])];
+        console.log('plese let me see', data)
 
-            if (operation !== "register"){
-                let t0 = performance.now();
-                let data =
-                    {
-                    agent_id: agent.agent_id,
-                    institution_id:agent.institution_id,
-                    image: photoBase64,
-                    signature: farmerData.signature,
-                    id : farmerData.id,
-                    rect: rect,
-                    moveable_rect: rect
-                };
-                console.log("plese let me see", data);
-                
-                axios
-                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifyfarmer", data)
-                    .then((data) => {
-                        let humanVerifyAPIResponse = data.data;
-                        // calling performance metrics API function
-                        callPerformanceMetrics("verify", humanVerifyAPIResponse);
-                        setApiCallInProgress(false);
-                        setPhotoUri(base64Header + humanVerifyAPIResponse.image);
-                        // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
-                        // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
-                        // let t1 = performance.now();
-                        // let total = parseInt(t1 - t0);
-                        // setTotalEnrollTimeFarmer(total);
-                        if (humanVerifyAPIResponse.match === false) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-                            setPhotoUri(base64Header + humanVerifyAPIResponse.image);
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess( false);
-                            // setShowFaceMatchNo(true);
-                        }
-                        else if (humanVerifyAPIResponse.match === true) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-                            setPhotoUri(base64Header + humanVerifyAPIResponse.image);
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess(true);
-                            // setShowFaceMatchOk(true);
-                        }
-                        else {
-                            setApiCallInProgress(false);
-                            setIsSuccess(false);
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            // setFaceNotDetected(true);
-                        }
-                        })
-                    .catch((err) => {
-                    if (err.response.status === 501 || err.response.status === 404)
-                    setApiCallInProgress(false);
-                    setIsSuccess(false);
-                    // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                    // setFaceNotDetected(true);
-                    });
-                }
-              else{
-                let t0 = performance.now();
-                
-                let data =
-                    {image: photoBase64,
-                    agent_id: agent.agent_id,
-                    institution_id:agent.company_id,
-                    rect: box,
-                    request_source: 'Halisi_V1.0',
-                    moveable_rect: box};
-                    console.log(data);
-                axios
-                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer", data)
-                    .then((data) => {
-                        let humanEnrollAPIResponse = data.data;
-                        console.log("data", data.data);
-                        
-                        callPerformanceMetrics("enroll", humanEnrollAPIResponse);
-                        // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
-                        // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
-                        // let t1 = performance.now();
-                        // let total = parseInt(t1 - t0);
-                        // setTotalEnrollTimeFarmer(total);
-                        if (humanEnrollAPIResponse.dedup_result === true) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess(false);
-                            // setShowDuplicateAlert(true);
-                        } else {
-                            if(humanEnrollAPIResponse.signature === "None" || humanEnrollAPIResponse.signature === null || humanEnrollAPIResponse.signature === undefined){
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            setApiCallInProgress(false);
-                            setIsSuccess(false);
-                            // setFaceNotDetected(true);
-                            }
-                            else{
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            writeToRecord(humanEnrollAPIResponse);
-                            setIsSuccess(true);
-                            Alert.alert(data.data.message);
-                            setStep(2) 
-                            // setShowEnrolledMessage(true);
-                            }
-                        }
-                      }
-                    )
-                    .catch((err) => {
-                      if (err.response.status === 501 || err.response.status === 404)
-                        setIsSuccess(false);
-                        setApiCallInProgress(false);
-                        console.log("There was an error",err);
-                        
-                        //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                        // setFaceNotDetected(true);
-                    });
-                  }
-              }
-        };
+        axios
+          .post(
+            'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifyfarmer',
+            data
+          )
+          .then((data) => {
+            let humanVerifyAPIResponse = data.data
+            // calling performance metrics API function
+            callPerformanceMetrics('verify', humanVerifyAPIResponse)
+            setApiCallInProgress(false)
+            setPhotoUri(base64Header + humanVerifyAPIResponse.image)
+            // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
+            // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
+            // let t1 = performance.now();
+            // let total = parseInt(t1 - t0);
+            // setTotalEnrollTimeFarmer(total);
+            if (humanVerifyAPIResponse.match === false) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setPhotoUri(base64Header + humanVerifyAPIResponse.image)
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(false)
+              // setShowFaceMatchNo(true);
+            } else if (humanVerifyAPIResponse.match === true) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setPhotoUri(base64Header + humanVerifyAPIResponse.image)
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(true)
+              // setShowFaceMatchOk(true);
+            } else {
+              setApiCallInProgress(false)
+              setIsSuccess(false)
+              //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+              // setFaceNotDetected(true);
+            }
+          })
+          .catch((err) => {
+            if (err.response.status === 501 || err.response.status === 404)
+              setApiCallInProgress(false)
+            setIsSuccess(false)
+            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+            // setFaceNotDetected(true);
+          })
+      } else {
+        let t0 = performance.now()
 
-
-       const handleSubmitLivestock = () => {
-        setApiCallInProgress(true);
-        
-        setIsSubmit(true);
-        console.log("Hello");
-        // console.log("No photo",photoBase64);
-        if (!photoBase64) {
-          console.log("No photo",photoBase64);
-          // photoBase64
-          
-          Alert.alert("Please take a picture")
-          setIsSuccess(false);
-          // Dispatch action to save res object
+        let data = {
+          image: photoBase64,
+          agent_id: agent.agent_id,
+          institution_id: agent.company_id,
+          rect: box,
+          request_source: 'Halisi_V1.0',
+          moveable_rect: box,
         }
-        else {
-            var rect = [parseInt(box[0]),parseInt(box[1]),parseInt(box[2]),parseInt(box[3])];
+        console.log(data)
+        axios
+          .post(
+            'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer',
+            data
+          )
+          .then((data) => {
+            let humanEnrollAPIResponse = data.data
+            console.log('data', data.data)
 
-            if (operation !== "register"){
-                let t0 = performance.now();
-                let data =
-                    {
-                    agent_id: agent.agent_id,
-                    institution_id:agent.institution_id,
-                    image: photoBase64,
-                    signature: farmerData.signature,
-                    id : farmerData.id,
-                    rect: rect,
-                    moveable_rect: rect
-                };
-                console.log("plese let me see", data);
-                
-                axios
-                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifylivestock", data)
-                    .then((data) => {
-                        let humanVerifyAPIResponse = data.data;
-                        // calling performance metrics API function
-                       callPerformanceMetricsForLivestock("verify", humanVerifyAPIResponse);
-                        setApiCallInProgress(false);
-                        // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
-                        // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
-                        // let t1 = performance.now();
-                        // let total = parseInt(t1 - t0);
-                        // setTotalEnrollTimeFarmer(total);
-                        if (humanVerifyAPIResponse.match === false) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess( false);
-                            // setShowFaceMatchNo(true);
-                        }
-                        else if (humanVerifyAPIResponse.match === true) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess(true);
-                            // setShowFaceMatchOk(true);
-                        }
-                        else {
-                            setApiCallInProgress(false);
-                            setIsSuccess(false);
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            // setFaceNotDetected(true);
-                        }
-                        })
-                    .catch((err) => {
-                    if (err.response.status === 501 || err.response.status === 404)
-                    setApiCallInProgress(false);
-                    setIsSuccess(false);
-                    // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                    // setFaceNotDetected(true);
-                    });
-                }
-              else{
-                let t0 = performance.now();
-                
-                let data =
-                    {image: photoBase64,
-                    agent_id: agent.agent_id,
-                    institution_id:agent.company_id,
-                    rect: box,
-                    request_source: 'Halisi_V1.0',
-                    moveable_rect: box};
-                    console.log(data);
-                axios
-                    .post("https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer", data)
-                    .then((data) => {
-                        let humanEnrollAPIResponse = data.data;
-                        console.log("data", data.data);
-                        
-                        callPerformanceMetrics("enroll", humanEnrollAPIResponse);
-                        // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
-                        setPhotoUri(base64Header + humanEnrollAPIResponse.image);
-                        Alert.alert(data.data.message)
-                        // let t1 = performance.now();
-                        // let total = parseInt(t1 - t0);
-                        // setTotalEnrollTimeFarmer(total);
-                        if (humanEnrollAPIResponse.dedup_result === true) {
-                            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            setFarmerImg(null);
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            setIsSuccess(false);
-                            // setShowDuplicateAlert(true);
-                        } else {
-                            if(humanEnrollAPIResponse.signature === "None" || humanEnrollAPIResponse.signature === null || humanEnrollAPIResponse.signature === undefined){
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                            setApiCallInProgress(false);
-                            setIsSuccess(false);
-                            // setFaceNotDetected(true);
-                            }
-                            else{
-                            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
-                            setPhotoUri(base64Header + humanEnrollAPIResponse.image);
-                            setApiCallInProgress(false);
-                            // setSuccessfulAPIcall(true);
-                            writeToRecord(humanEnrollAPIResponse);
-                            setIsSuccess(true);
-                            Alert.alert(data.data.message)
-                            // setShowEnrolledMessage(true);
-                            }
-                        }
-                      }
-                    )
-                    .catch((err) => {
-                      if (err.response.status === 501 || err.response.status === 404)
-                        setIsSuccess(false);
-                        setApiCallInProgress(false);
-                        console.log("There was an error",err);
-                        
-                        //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-                        // setFaceNotDetected(true);
-                    });
-                  }
+            callPerformanceMetrics('enroll', humanEnrollAPIResponse)
+            // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
+            // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
+            // let t1 = performance.now();
+            // let total = parseInt(t1 - t0);
+            // setTotalEnrollTimeFarmer(total);
+            if (humanEnrollAPIResponse.dedup_result === true) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(false)
+              // setShowDuplicateAlert(true);
+            } else {
+              if (
+                humanEnrollAPIResponse.signature === 'None' ||
+                humanEnrollAPIResponse.signature === null ||
+                humanEnrollAPIResponse.signature === undefined
+              ) {
+                //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                setApiCallInProgress(false)
+                setIsSuccess(false)
+                // setFaceNotDetected(true);
+              } else {
+                //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
+                setApiCallInProgress(false)
+                // setSuccessfulAPIcall(true);
+                writeToRecord(humanEnrollAPIResponse)
+                setIsSuccess(true)
+                Alert.alert(data.data.message)
+                setStep(2)
+                // setShowEnrolledMessage(true);
               }
-        }; 
-        const prevStep = () => setStep(step - 1);
+            }
+          })
+          .catch((err) => {
+            if (err.response.status === 501 || err.response.status === 404)
+              setIsSuccess(false)
+            setApiCallInProgress(false)
+            console.log('There was an error', err)
 
+            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+            // setFaceNotDetected(true);
+          })
+      }
+    }
+  }
 
+  const handleSubmitLivestock = () => {
+    setApiCallInProgress(true)
 
+    setIsSubmit(true)
+    console.log('Hello')
+    // console.log("No photo",photoBase64);
+    if (!photoBase64) {
+      console.log('No photo', photoBase64)
+      // photoBase64
 
+      Alert.alert('Please take a picture')
+      setIsSuccess(false)
+      // Dispatch action to save res object
+    } else {
+      let rect = [
+        parseInt(box[0]),
+        parseInt(box[1]),
+        parseInt(box[2]),
+        parseInt(box[3]),
+      ]
 
+      if (operation !== 'register') {
+        let t0 = performance.now()
+        let data = {
+          agent_id: agent.agent_id,
+          institution_id: agent.institution_id,
+          image: photoBase64,
+          signature: farmerData.signature,
+          id: farmerData.id,
+          rect: rect,
+          moveable_rect: rect,
+        }
+        console.log('plese let me see', data)
 
+        axios
+          .post(
+            'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifylivestock',
+            data
+          )
+          .then((data) => {
+            let humanVerifyAPIResponse = data.data
+            // calling performance metrics API function
+            callPerformanceMetricsForLivestock('verify', humanVerifyAPIResponse)
+            setApiCallInProgress(false)
+            // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
+            // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
+            // let t1 = performance.now();
+            // let total = parseInt(t1 - t0);
+            // setTotalEnrollTimeFarmer(total);
+            if (humanVerifyAPIResponse.match === false) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(false)
+              // setShowFaceMatchNo(true);
+            } else if (humanVerifyAPIResponse.match === true) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(true)
+              // setShowFaceMatchOk(true);
+            } else {
+              setApiCallInProgress(false)
+              setIsSuccess(false)
+              //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+              // setFaceNotDetected(true);
+            }
+          })
+          .catch((err) => {
+            if (err.response.status === 501 || err.response.status === 404)
+              setApiCallInProgress(false)
+            setIsSuccess(false)
+            // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+            // setFaceNotDetected(true);
+          })
+      } else {
+        let t0 = performance.now()
 
+        let data = {
+          image: photoBase64,
+          agent_id: agent.agent_id,
+          institution_id: agent.company_id,
+          rect: box,
+          request_source: 'Halisi_V1.0',
+          moveable_rect: box,
+        }
+        console.log(data)
+        axios
+          .post(
+            'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer',
+            data
+          )
+          .then((data) => {
+            let humanEnrollAPIResponse = data.data
+            console.log('data', data.data)
+
+            callPerformanceMetrics('enroll', humanEnrollAPIResponse)
+            // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
+            setPhotoUri(base64Header + humanEnrollAPIResponse.image)
+            Alert.alert(data.data.message)
+            // let t1 = performance.now();
+            // let total = parseInt(t1 - t0);
+            // setTotalEnrollTimeFarmer(total);
+            if (humanEnrollAPIResponse.dedup_result === true) {
+              // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+              setFarmerImg(null)
+              setApiCallInProgress(false)
+              // setSuccessfulAPIcall(true);
+              setIsSuccess(false)
+              // setShowDuplicateAlert(true);
+            } else {
+              if (
+                humanEnrollAPIResponse.signature === 'None' ||
+                humanEnrollAPIResponse.signature === null ||
+                humanEnrollAPIResponse.signature === undefined
+              ) {
+                //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+                setApiCallInProgress(false)
+                setIsSuccess(false)
+                // setFaceNotDetected(true);
+              } else {
+                //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
+                setPhotoUri(base64Header + humanEnrollAPIResponse.image)
+                setApiCallInProgress(false)
+                // setSuccessfulAPIcall(true);
+                writeToRecord(humanEnrollAPIResponse)
+                setIsSuccess(true)
+                Alert.alert(data.data.message)
+                // setShowEnrolledMessage(true);
+              }
+            }
+          })
+          .catch((err) => {
+            if (err.response.status === 501 || err.response.status === 404)
+              setIsSuccess(false)
+            setApiCallInProgress(false)
+            console.log('There was an error', err)
+
+            //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
+            // setFaceNotDetected(true);
+          })
+      }
+    }
+  }
+  const prevStep = () => setStep(step - 1)
 
   // Save data to AsyncStorage
- 
 
   // --- PDF Certificate download (cross-platform) ---
   // const handleDownload = async () => {
@@ -563,18 +592,18 @@ if(loading){
   //             * { margin: 0; padding: 0; box-sizing: border-box; }
   //             @page { size: A4; margin: 0; }
   //             @media print { body { margin: 0; padding: 0; } }
-  //             body { 
-  //               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+  //             body {
+  //               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   //               background: #fff;
   //               width: 210mm;
   //               height: 297mm;
   //               margin: 0;
   //               padding: 0;
   //             }
-  //             .card { 
+  //             .card {
   //               width: 100%;
   //               height: 100%;
-  //               background: #fff; 
+  //               background: #fff;
   //               padding: 20mm;
   //               box-sizing: border-box;
   //               display: flex;
@@ -589,9 +618,9 @@ if(loading){
   //             .left { flex-shrink: 1; }
   //             .photo { width: 50mm; height: 40mm;  object-fit: cover; border: 1px solid #ddd; }
   //             .right { flex: 1; }
-  //             .info { 
-  //               margin-bottom: 5mm; 
-  //               color: #222; 
+  //             .info {
+  //               margin-bottom: 5mm;
+  //               color: #222;
   //               font-size: 12px;
   //               display: flex;
   //               gap: 3mm; /* increased by 25% */
@@ -599,11 +628,11 @@ if(loading){
   //             }
   //             .label { color: #333; font-weight: 700; width: 20mm; flex-shrink: 0; } /* labels reduced by 75% */
   //             .value { color: #000; flex: 1; }
-  //             .footer { 
-  //               margin-top: auto; 
+  //             .footer {
+  //               margin-top: auto;
   //               padding-top: 10mm;
-  //               text-align: center; 
-  //               color: #999; 
+  //               text-align: center;
+  //               color: #999;
   //               font-size: 10px;
   //               border-top: 1px solid #eee;
   //             }
@@ -613,7 +642,7 @@ if(loading){
   //           <div class="card">
   //             <div class="header">
   //               ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
-                
+
   //               <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
   //               <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
   //             </div>
@@ -625,7 +654,7 @@ if(loading){
 
   //               <div class="right">
   //                 <div class="info"><span class="label font-bold">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
-                  
+
   //                 <div class="info"><span class="label">Phone:</span> <span class="value">${escapeHtml(cert.phone)}</span></div>
   //                 <div class="info"><span class="label">Gender:</span> <span class="value">${escapeHtml(cert.gender)}</span></div>
   //                 <div class="info"><span class="label">DOB:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
@@ -636,7 +665,7 @@ if(loading){
   //                 <div class="info" style="margin-top: 8mm; padding-top: 8mm; border-top: 1px solid #ddd;"><span class="label">Agent ID:</span> <span class="value">${escapeHtml(cert.agentId)}</span></div>
   //                 <div class="info"><span class="label">Agent:</span> <span class="value">${escapeHtml(cert.agentName)}</span></div>
   //               </div>
-                
+
   //             </div>
   //             <div style="margin-top: 15mm; padding: 10mm; font-size: 9px; color: #555; line-height: 1.5; border-top: 1px solid #ddd; margin-left: 20mm; margin-right: 20mm;">
   //               <p style="margin: 0 0 8mm 0;">
@@ -650,7 +679,6 @@ if(loading){
   //               </p>
   //             </div>
   //             </div>
-
 
   //         </body>
   //       </html>
@@ -728,241 +756,247 @@ if(loading){
 
   // small helpers for safety
   function escapeHtml(input: string | undefined | null) {
-    if (!input) return "";
+    if (!input) return ''
     return input
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
   }
 
   function sanitizeFileName(input: string | undefined | null) {
-    if (!input) return "unknown";
-    return input.replace(/[^a-z0-9_\-]/gi, "_");
+    if (!input) return 'unknown'
+    return input.replace(/[^a-z0-9_\-]/gi, '_')
   }
 
-  if(registerNewLivestock){
+  if (registerNewLivestock) {
     return <RegisterAnotherLivestockScreen />
   }
 
   // Step content rendering
   const renderStepContent = () => {
-    if (!permission) return <View />;
-
+    if (!permission) return <View />
 
     switch (step) {
       case 1:
         return (
+          <StepNationalId
+            isEnabled={isEnabled}
+            setIsEnabled={setIsEnabled}
+            nationalId={nationalId}
+            setNationalId={setNationalId}
+            country={country}
+            setCountry={setCountry}
+            permission={permission}
+            requestPermission={requestPermission}
+            photoUri={photoUri}
+            setPhotoUri={setPhotoUri}
+            cameraRef={cameraRef}
+            facing={facing}
+            toggleCameraFacing={toggleCameraFacing}
+            setPhotoBase64={setPhotoBase64}
+            species='farmer'
+            onpress={handleSubmit}
+            errors={errors} // <-- REQUIRED
+          />
+        )
 
-
-<StepNationalId
-  isEnabled={isEnabled}
-  setIsEnabled={setIsEnabled}
-  nationalId={nationalId}
-  setNationalId={setNationalId}
-  country={country}
-  setCountry={setCountry}
-  permission={permission}
-  requestPermission={requestPermission}
-  photoUri={photoUri}
-  setPhotoUri={setPhotoUri}
-  cameraRef={cameraRef}
-  facing={facing}
-  toggleCameraFacing={toggleCameraFacing}
-  setPhotoBase64={setPhotoBase64}
-  species="farmer"
-  onpress ={handleSubmit}
-  errors={errors}          // <-- REQUIRED
-/>
-)
-    
-
-    case 2:
-      return (
-<StepPersonalInfo
-      firstName={firstName}
-      lastName={lastName}
-      gender={gender}
-      nationalId={nationalId}
-      setFirstName={setFirstName}
-      setLastName={setLastName}
-      setGender={setGender}
-      setNationalId={setNationalId}
-      country={country}
-      setCountry={setCountry}
-      city={city}
-      setCity={setCity}
-      phone={phone}
-      setPhone={setPhone}
-      monthlyIncome={monthlyIncome}
-      setMonthlyIncome={setMonthlyIncome}
-      isMemberCooperative={isMemberCooperative}
-      setIsMemberCooperative={setIsMemberCooperative}
-      nameOfCooperative={nameOfCooperative}
-      setNameOfCooperative={setNameOfCooperative}
-      experience={experience}
-      setExperience={setExperience}
-      ageCategory={ageCategory}
-      setAgeCategory={setAgeCategory}
-      schooling={schooling}
-      setSchooling={setSchooling}
-      accommodation={accommodation}
-      setAccommodation={setAccommodation}
-      residentialStatus={residentialStatus}
-      setResidentialStatus={setResidentialStatus}
-      annualIncome={annualIncome}
-      setAnnualIncome={setAnnualIncome}
-      tenureWithFinancialInstitution={tenureWithFinancialInstitution}
-      setTenureWithFinancialInstitution={setTenureWithFinancialInstitution}
-      farmerKRAPin={farmerKRAPin}
-      setFarmerKRApin={setFarmerKRApin}
-      errors={errors} 
-      handleFarmerSubmit ={handlefarmerRegister}
-      nextStep={nextStep}
-      operation={operation}
-      setShowOperation={setShowOperation}
-      
-    />
-
-      );
+      case 2:
+        return (
+          <StepPersonalInfo
+            firstName={firstName}
+            lastName={lastName}
+            gender={gender}
+            nationalId={nationalId}
+            setFirstName={setFirstName}
+            setLastName={setLastName}
+            setGender={setGender}
+            setNationalId={setNationalId}
+            country={country}
+            setCountry={setCountry}
+            city={city}
+            setCity={setCity}
+            phone={phone}
+            setPhone={setPhone}
+            monthlyIncome={monthlyIncome}
+            setMonthlyIncome={setMonthlyIncome}
+            isMemberCooperative={isMemberCooperative}
+            setIsMemberCooperative={setIsMemberCooperative}
+            nameOfCooperative={nameOfCooperative}
+            setNameOfCooperative={setNameOfCooperative}
+            experience={experience}
+            setExperience={setExperience}
+            ageCategory={ageCategory}
+            setAgeCategory={setAgeCategory}
+            schooling={schooling}
+            setSchooling={setSchooling}
+            accommodation={accommodation}
+            setAccommodation={setAccommodation}
+            residentialStatus={residentialStatus}
+            setResidentialStatus={setResidentialStatus}
+            annualIncome={annualIncome}
+            setAnnualIncome={setAnnualIncome}
+            tenureWithFinancialInstitution={tenureWithFinancialInstitution}
+            setTenureWithFinancialInstitution={
+              setTenureWithFinancialInstitution
+            }
+            farmerKRAPin={farmerKRAPin}
+            setFarmerKRApin={setFarmerKRApin}
+            errors={errors}
+            handleFarmerSubmit={handlefarmerRegister}
+            nextStep={nextStep}
+            operation={operation}
+            setShowOperation={setShowOperation}
+          />
+        )
 
       case 3:
-        
-
         return (
-         
-//           <StepOperation
-          
-//            livestocktag={livestockTag}
-//               setLivestockTag={setLivestockTag}
-//               errors={errors}
-//               permission={permission}
-//               livestockPhotoUri={livestockPhotoUri}
-//               setLivestockPhotoUri={setLivestockPhotoUri}
-//               setPhotoBase64s={setPhotoBase64}
-//               requestPermission={requestPermission}
-//               facing={facing}
-//               toggleCameraFacing={toggleCameraFacing}
-//               cameraRef={cameraRef}
-//               nextStep={nextStep}
-// handleSubmitLivestock={handleSubmitLivestock}
+          //           <StepOperation
 
-//      />
-<StepLivestock nextStep={nextStep}
-              livestocktag={livestockTag}
-              setLivestockTag={setLivestockTag}
-              errors={errors}
-              permission={permission}
-          requestPermission={requestPermission}
-          livestockPhotoUri={livestockPhotoUri}
-          setLivestockPhotoUri={setLivestockPhotoUri}
-          cameraRef={cameraRef}
-          facing={facing}
-          toggleCameraFacing={toggleCameraFacing}
-          setPhotoBase64={setPhotoBase64}
-          handleSubmitLivestock={handleSubmitLivestock}/>
-        );
-        ;
+          //            livestocktag={livestockTag}
+          //               setLivestockTag={setLivestockTag}
+          //               errors={errors}
+          //               permission={permission}
+          //               livestockPhotoUri={livestockPhotoUri}
+          //               setLivestockPhotoUri={setLivestockPhotoUri}
+          //               setPhotoBase64s={setPhotoBase64}
+          //               requestPermission={requestPermission}
+          //               facing={facing}
+          //               toggleCameraFacing={toggleCameraFacing}
+          //               cameraRef={cameraRef}
+          //               nextStep={nextStep}
+          // handleSubmitLivestock={handleSubmitLivestock}
 
-     
-      }
-    };
+          //      />
+          <StepLivestock
+            nextStep={nextStep}
+            livestocktag={livestockTag}
+            setLivestockTag={setLivestockTag}
+            errors={errors}
+            permission={permission}
+            requestPermission={requestPermission}
+            livestockPhotoUri={livestockPhotoUri}
+            setLivestockPhotoUri={setLivestockPhotoUri}
+            cameraRef={cameraRef}
+            facing={facing}
+            toggleCameraFacing={toggleCameraFacing}
+            setPhotoBase64={setPhotoBase64}
+            handleSubmitLivestock={handleSubmitLivestock}
+          />
+        )
+    }
+  }
 
   return (
     <View style={styles.wrapper}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-          <Text style={styles.header}>Registration</Text>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.header}>Farmer Authentication</Text>
 
-          {/* Step Indicator */}
-          <MultiStepComponent setStep={setStep} step={step}/>
+        {/* Step Indicator */}
+        <MultiStepComponent setStep={setStep} step={step} />
 
-          {renderStepContent()}
+        {renderStepContent()}
 
-          {/* Navigation Buttons */}
-{/* Navigation Buttons */}
-{step <= totalSteps && (
-  <View style={styles.buttonContainer}>
-    {/* Back button */}
-    {step > 1 && (
-      <TouchableOpacity style={styles.nextButton} onPress={prevStep}>
-        <Text style={styles.buttonText}>Back</Text>
-      </TouchableOpacity>
-    )}
+        {/* Navigation Buttons */}
+        {/* Navigation Buttons */}
+        {step <= totalSteps && (
+          <View style={styles.buttonContainer}>
+            {/* Back button */}
+            {step > 1 && (
+              <TouchableOpacity style={styles.nextButton} onPress={prevStep}>
+                <Text style={styles.buttonText}>Back</Text>
+              </TouchableOpacity>
+            )}
 
-    {/* Step-specific action button */}
-    {(() => {
-      switch (step) {
-        case 3: // Submit Farmer Info
-          return (
-            <TouchableOpacity
-              style={styles.nextButton}
-              onPress={nextStep}
-            >
-              <Text style={styles.buttonText}>Next</Text>
-            </TouchableOpacity>
-          );
+            {/* Step-specific action button */}
+            {(() => {
+              switch (step) {
+                case 3: // Submit Farmer Info
+                  return (
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={nextStep}
+                    >
+                      <Text style={styles.buttonText}>Next</Text>
+                    </TouchableOpacity>
+                  )
 
-        case 6: // Submit Livestock Info
-          return (
-            <TouchableOpacity
-              style={styles.nextButton}
-              onPress={async () => {
-                const newErrors: { [key: string]: string } = {};
+                case 6: // Submit Livestock Info
+                  return (
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={async () => {
+                        const newErrors: { [key: string]: string } = {}
 
-                if (!livestockTag?.trim()) newErrors.livestockTag = "Livestock tag is required";
-                if (!livestockPhotoUri) newErrors.livestockPhotoUri = "Livestock photo is required";
+                        if (!livestockTag?.trim())
+                          newErrors.livestockTag = 'Livestock tag is required'
+                        if (!livestockPhotoUri)
+                          newErrors.livestockPhotoUri =
+                            'Livestock photo is required'
 
-                setErrors(newErrors);
+                        setErrors(newErrors)
 
-                if (Object.keys(newErrors).length === 0) {
-                  try {
-                    await handleLivestockSubmit(); // submit livestock
-                    Alert.alert("Success", "Farmer and livestock registration complete!");
-                    // router.replace("/RegisterLiveStock"); // redirect after submission
-                  } catch (e) {
-                    console.error("Error saving livestock:", e);
-                    Alert.alert("Error", "Failed to save livestock");
-                  }
-                }
-              }}
-            >
-              <Text style={styles.buttonText}>Finish</Text>
-            </TouchableOpacity>
-          );
+                        if (Object.keys(newErrors).length === 0) {
+                          try {
+                            await handleLivestockSubmit() // submit livestock
+                            Alert.alert(
+                              'Success',
+                              'Farmer and livestock registration complete!'
+                            )
+                            // router.replace("/RegisterLiveStock"); // redirect after submission
+                          } catch (e) {
+                            console.error('Error saving livestock:', e)
+                            Alert.alert('Error', 'Failed to save livestock')
+                          }
+                        }
+                      }}
+                    >
+                      <Text style={styles.buttonText}>Finish</Text>
+                    </TouchableOpacity>
+                  )
 
-        default: // Next Step for all other steps
-          return (
-            <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
-              <Text style={styles.buttonText}>Next</Text>
-            </TouchableOpacity>
-          );
-      }
-    })()}
-  </View>
-)}
-
-
-
-        </ScrollView>
-        </View>
-     
-  );
+                default: // Next Step for all other steps
+                  return (
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={nextStep}
+                    >
+                      <Text style={styles.buttonText}>Next</Text>
+                    </TouchableOpacity>
+                  )
+              }
+            })()}
+          </View>
+        )}
+      </ScrollView>
+      <AppModal visible={showModalNationalIdNotRegistered}>
+        <Text>
+          This National Identification number is valid but not yet registered.
+          Please proceed with the registration process.
+        </Text>
+      </AppModal>
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, padding: 16, backgroundColor: "#f2f6f2" },
+  wrapper: { flex: 1, padding: 16, backgroundColor: '' },
   header: {
     fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 10,
-    color: "#133d23",
+    color: '#133d23',
   },
   stepIndicatorContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginVertical: 14,
     gap: 6,
   },
@@ -972,48 +1006,99 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#2e7d32",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    borderColor: '#2e7d32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  activeStepCircle: { backgroundColor: "#2e7d32" },
-  stepText: { color: "#2e7d32", fontWeight: "700" },
-  activeStepText: { color: "#fff" },
+  activeStepCircle: { backgroundColor: '#2e7d32' },
+  stepText: { color: '#2e7d32', fontWeight: '700' },
+  activeStepText: { color: '#fff' },
 
   stepCard: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     padding: 16,
     marginVertical: 8,
     // borderRadius: 10,
-    shadowColor: "#000",
+    shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.06,
     // shadowRadius: 6,
     // elevation: 2,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "600", marginBottom: 12, color: "#2e7d32" },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#2e7d32',
+  },
 
- 
+  permissionContainer: { alignItems: 'center', justifyContent: 'center' },
+  permissionText: { textAlign: 'center', fontSize: 16, marginBottom: 10 },
 
-  permissionContainer: { alignItems: "center", justifyContent: "center" },
-  permissionText: { textAlign: "center", fontSize: 16, marginBottom: 10 },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    gap: 10,
+  },
+  backButton: {
+    flex: 1,
+    backgroundColor: '#999',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  nextButton: {
+    flex: 1,
+    backgroundColor: '#2e7d32',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: { color: '#fff', fontWeight: '600' },
 
-  buttonContainer: { flexDirection: "row", justifyContent: "space-between", marginTop: 20,gap:10 },
-  backButton: { flex: 1, backgroundColor: "#999", padding: 12, borderRadius: 8, alignItems: "center", marginRight: 10 },
-  nextButton: { flex: 1, backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "600" },
-
-  reviewContainer: { flexDirection: "row", gap: 30, alignItems: "flex-start", justifyContent: "space-between" },
-  leftColumn: { flex: 1, alignItems: "center" },
+  reviewContainer: {
+    flexDirection: 'row',
+    gap: 30,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  leftColumn: { flex: 1, alignItems: 'center' },
   rightColumn: { flex: 2 },
   reviewImage: { width: 100, height: 100, borderRadius: 8 },
-  placeholderImage: { width: 100, height: 100, borderRadius: 8, backgroundColor: "#eee", justifyContent: "center", alignItems: "center" },
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-  label: { fontWeight: "700", marginTop: 8, color: "#444", fontSize: 13 },
-  value: { color: "#000", fontSize: 14 },
+  label: { fontWeight: '700', marginTop: 8, color: '#444', fontSize: 13 },
+  value: { color: '#000', fontSize: 14 },
 
-  reviewButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 18 },
-  downloadButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#1e88e5", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
-  submitButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, paddingHorizontal: 16 },
-});
+  reviewButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 18,
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e88e5',
+    padding: 12,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2e7d32',
+    padding: 12,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+  },
+})

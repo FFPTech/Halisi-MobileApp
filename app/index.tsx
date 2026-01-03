@@ -1,23 +1,58 @@
-import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
-import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
-import { Image, StatusBar, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { users } from "../data/user";
-import { useUser } from "../Hooks/useUserGlobal";
-import { loadUsersFromStorage, saveUsersToStorage } from "../storage/storeUsers";
+/* eslint-disable react-hooks/rules-of-hooks */
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
+import { useRouter } from 'expo-router'
+import React from 'react'
+import {
+  Alert,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { AppModal } from '../components/AppModal'
+import LoadingSpinner from '../components/LoadingSpinner'
 
-
-
-
-
+import { useDispatch, useSelector } from 'react-redux'
+import { removeSignInModal, signInWithGoogle } from '../features/userSlice'
+import type { AppDispatch } from '../store/store'
 
 export default function index() {
+  // const {
+  //   handleSignIn,
+  //   loading,
+  //   signInModal,
+  //   setSignInModal,
+  // } = useUser()
 
-const {handleSignIn,email,setEmail,password,setPassword,loading} = useUser();
-  
-const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>()
+
+  const { loading, signInModal } = useSelector((state: any) => state.user)
+  // const [signInModal, setSignInModal] = React.useState(false)
+
+  const router = useRouter()
+
+  const handleResponseNo = () => {
+    dispatch(removeSignInModal())
+    router.replace('/')
+  }
+
+  const handleResponseYes = () => {
+    dispatch(removeSignInModal())
+    router.replace('/FillForm')
+  }
+
+  const handleLoginClick = async () => {
+    // ✅ Dispatch the thunk
+    const result = await dispatch(signInWithGoogle())
+    if (signInWithGoogle.rejected.match(result)) {
+      Alert.alert('Login Failed', result.payload || 'Something went wrong')
+    } else {
+      Alert.alert('Welcome!', `Hello ${result.payload?.agent.name}`)
+    }
+  }
 
   // const clearAllData = async () => {
   // try {
@@ -26,36 +61,48 @@ const router = useRouter();
   // } catch (error) {
   //   console.error(" Error clearing AsyncStorage:", error);
   // }}
-
   //  Load or initialize users
-  useEffect(() => {
-    (async () => {
-      const existingUsers = await loadUsersFromStorage();
-      if (!existingUsers) {
-        console.log("🚀 No users found — saving to local storage...");
-        await saveUsersToStorage(users);
-      }
-      const savedUsers = await loadUsersFromStorage();
-      // console.log(" Users currently in AsyncStorage:", savedUsers);
-    })();
-  }, []);
-
   //  Handle Login
-if(loading){return <LoadingSpinner size="large" color=" #2e7d32" />}
-  
+  if (loading) {
+    return <LoadingSpinner size='large' color=' #2e7d32' />
+  }
+
   return (
-    <SafeAreaView style={styles.wrapper}>  
-     <StatusBar  backgroundColor="#2e7d32" />
+    <SafeAreaView style={styles.wrapper}>
+      <StatusBar backgroundColor='#2e7d32' />
 
-    <View style={styles.container}>
-      <Image source={require('../assets/images/halisi-logo.png')} style={styles.logo} resizeMode="contain" />
+      <View style={styles.container}>
+        <Image
+          source={require('../assets/images/halisi-logo.png')}
+          style={styles.logo}
+          resizeMode='contain'
+        />
 
-
-        <GoogleSigninButton size={GoogleSigninButton.Size.Wide}  color={GoogleSigninButton.Color.Light} style={{width:212,height:48}} onPress={handleSignIn}/>
+        <GoogleSigninButton
+          size={GoogleSigninButton.Size.Wide}
+          color={GoogleSigninButton.Color.Light}
+          style={{ width: 212, height: 48 }}
+          onPress={handleLoginClick}
+        />
       </View>
-    
+      <AppModal visible={signInModal} onClose={() => {}} title=''>
+        <View>
+          <Text>
+            Welcome! You are authenticated and ready to go. Feel free to
+            proceed.
+          </Text>
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity onPress={handleResponseYes}>
+              <Text>Yes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleResponseNo}>
+              <Text>No</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </AppModal>
     </SafeAreaView>
-  );
+  )
 }
 
 //Emulator SHA-1 fingerprint:
@@ -63,16 +110,15 @@ if(loading){return <LoadingSpinner size="large" color=" #2e7d32" />}
 
 //Physical Device SHA-1 fingerprint:
 // 87:C9:44:73:0F:0D:5E:B5:BC:E6:72:CD:24:C6:B5:07:C1:D2:ED:5F
-const styles = StyleSheet.create({ 
-
-  wrapper:{
-    flex:1,
-    backgroundColor: "#eee",
+const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#eee',
   },
   container: {
-    paddingTop:70,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingTop: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
     // paddingHorizontal: 20,
   },
   logo: {
@@ -82,7 +128,12 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 12,
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
   },
-});
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+})
