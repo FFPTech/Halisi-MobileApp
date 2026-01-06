@@ -3,6 +3,8 @@ import axios from 'axios'
 import { RootState } from '../store/store'
 import { getCountryCode } from '../utils/utils'
 
+/* -------------------- TYPES -------------------- */
+
 export interface FarmerIPRSData {
   firstName?: string
   middleName?: string
@@ -14,6 +16,8 @@ export interface FarmerIPRSData {
   idType?: string
   mainAddress?: string
   mobileTelephoneNumber?: string
+  identifier?: string
+  signature?: string
 }
 
 interface FarmerState {
@@ -26,13 +30,18 @@ interface FarmerState {
   apiCallInProgress: boolean
   iprsStatus: boolean
   iprsMessage: string | null
+
+  showcameraComponent: boolean
   showModalNotFound: boolean
   showValidNINNoIPRS: boolean
   showValidNINNoAlert: boolean
   showValidNINOkAlert: boolean
   showModalValid: boolean
+
   error: boolean
 }
+
+/* -------------------- INITIAL STATE -------------------- */
 
 const initialState: FarmerState = {
   farmerNationalNumber: '',
@@ -44,15 +53,17 @@ const initialState: FarmerState = {
   apiCallInProgress: false,
   iprsStatus: false,
   iprsMessage: null,
-  showModalValid: false,
 
+  showModalNotFound: false,
   showValidNINNoIPRS: false,
   showValidNINNoAlert: false,
   showValidNINOkAlert: false,
-  showModalNotFound: false,
-
+  showModalValid: false,
+  showcameraComponent: false,
   error: false,
 }
+
+/* -------------------- VERIFY NIN -------------------- */
 
 export const verifyNIN = createAsyncThunk<
   void,
@@ -60,10 +71,7 @@ export const verifyNIN = createAsyncThunk<
   { state: RootState }
 >(
   'farmer/verifyNIN',
-  async ({ farmerNationalNumber, selectedCountry }, thunkAPI) => {
-    const { dispatch } = thunkAPI
-    // const { agent } = getState().user
-
+  async ({ farmerNationalNumber, selectedCountry }, { dispatch }) => {
     dispatch(setFarmerNationalNumber(farmerNationalNumber))
     dispatch(setApiCallInProgress(true))
 
@@ -75,15 +83,11 @@ export const verifyNIN = createAsyncThunk<
       env: 'Qua',
     }
 
-    console.log('Verifying')
-
     try {
       const response = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/iprsverification',
         requestData
       )
-
-      console.log('Verification complete')
 
       const res = response.data
       const message = res?.message?.toLowerCase() || ''
@@ -101,12 +105,12 @@ export const verifyNIN = createAsyncThunk<
       }
 
       if (!statusFound) {
-        dispatch(showModalNotFound(true))
         dispatch(setApiCallInProgress(false))
+        dispatch(showModalNotFound(true))
         return
       }
 
-      // FOUND
+      /* ---------- FOUND ---------- */
       dispatch(setIprsStatus(true))
 
       dispatch(
@@ -121,18 +125,21 @@ export const verifyNIN = createAsyncThunk<
           idType: res.data.identityType,
           mainAddress: res.data.mainAddress,
           mobileTelephoneNumber: res.data.mobileTelephoneNumber,
+          identifier: res.data.identifier,
+          signature: res.data.signature,
         })
       )
 
-      // 🔁 CALL QUERY DB
       dispatch(queryDB({ farmerNationalNumber, selectedCountry }))
-    } catch (error) {
-      console.log('IPRS ERROR:', error)
-      console.log('IPRS ERROR MESSAGE:', error?.message)
-      console.log('IPRS ERROR RESPONSE:', error?.response?.data)
+    } catch (error: any) {
+      console.log('IPRS ERROR:', error?.response?.data || error.message)
+      dispatch(setApiCallInProgress(false))
+      dispatch(showNoIPRS(true))
     }
   }
 )
+
+/* -------------------- QUERY DB -------------------- */
 
 export const queryDB = createAsyncThunk<
   void,
@@ -141,8 +148,13 @@ export const queryDB = createAsyncThunk<
 >(
   'farmer/queryDB',
   async ({ farmerNationalNumber, selectedCountry }, { dispatch, getState }) => {
-    const { agent } = getState().user
-    console.log(agent)
+    const agent = getState().user.agent
+
+    if (!agent) {
+      dispatch(setApiCallInProgress(false))
+      dispatch(showValidNINNoAlert(true))
+      return
+    }
 
     const data = {
       farmer_national_id: farmerNationalNumber,
@@ -159,7 +171,6 @@ export const queryDB = createAsyncThunk<
       )
 
       const res = response.data
-      console.log(res)
 
       if (res.identifier === null) {
         dispatch(
@@ -170,24 +181,27 @@ export const queryDB = createAsyncThunk<
         )
         dispatch(setOperation('register'))
         dispatch(setIprsStatus(true))
-        dispatch(showNoAlert(true))
+        dispatch(showValidNINNoAlert(true))
         dispatch(setShowModalIsValid(true))
       } else {
         dispatch(setEnrollDbData(res))
         dispatch(setOperation('update'))
         dispatch(setRecordId(res.db_data[0]._id))
         dispatch(setIprsStatus(true))
-        dispatch(showOkAlert(true))
+        dispatch(showValidNINOkAlert(true))
       }
     } catch (error) {
-      dispatch(setOperation('register'))
-      dispatch(showNoAlert(true))
       console.log(error)
+      dispatch(setOperation('register'))
+      dispatch(showValidNINNoAlert(true))
     } finally {
       dispatch(setApiCallInProgress(false))
     }
   }
 )
+
+/* -------------------- SLICE -------------------- */
+
 const farmerSlice = createSlice({
   name: 'farmer',
   initialState,
@@ -219,10 +233,10 @@ const farmerSlice = createSlice({
     showNoIPRS(state, action: PayloadAction<boolean>) {
       state.showValidNINNoIPRS = action.payload
     },
-    showNoAlert(state, action: PayloadAction<boolean>) {
+    showValidNINNoAlert(state, action: PayloadAction<boolean>) {
       state.showValidNINNoAlert = action.payload
     },
-    showOkAlert(state, action: PayloadAction<boolean>) {
+    showValidNINOkAlert(state, action: PayloadAction<boolean>) {
       state.showValidNINOkAlert = action.payload
     },
     showModalNotFound(state, action: PayloadAction<boolean>) {
@@ -231,8 +245,14 @@ const farmerSlice = createSlice({
     closeShowModalNotFound(state) {
       state.showModalNotFound = false
     },
-    setShowModalIsValid(state, action) {
+    setShowModalIsValid(state, action: PayloadAction<boolean>) {
       state.showModalValid = action.payload
+    },
+    openShowCameraComponent(state) {
+      state.showcameraComponent = true
+    },
+    closeShowCameraComponent(state) {
+      state.showcameraComponent = false
     },
     closeValidModal(state) {
       state.showModalValid = false
@@ -250,12 +270,14 @@ export const {
   setIprsStatus,
   setIPRSMessage,
   showNoIPRS,
-  showNoAlert,
-  showOkAlert,
-  closeShowModalNotFound,
+  showValidNINNoAlert,
+  showValidNINOkAlert,
   showModalNotFound,
   setShowModalIsValid,
   closeValidModal,
+  closeShowModalNotFound,
+  openShowCameraComponent,
+  closeShowCameraComponent,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

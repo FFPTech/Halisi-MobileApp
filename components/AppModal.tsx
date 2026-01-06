@@ -1,7 +1,6 @@
 import React from 'react'
 import {
   Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
@@ -10,7 +9,7 @@ import {
 
 interface AppModalProps {
   visible: boolean
-  onClose?: () => void
+
   children: React.ReactNode
   title?: string
   animationType?: 'slide' | 'fade' | 'none'
@@ -18,29 +17,20 @@ interface AppModalProps {
 
 export const AppModal: React.FC<AppModalProps> = ({
   visible,
-  onClose,
+
   children,
   title,
   animationType = 'fade',
 }) => {
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType={animationType}
-      onRequestClose={onClose}
-    >
-      <TouchableWithoutFeedback onPress={onClose}>
+    <Modal transparent visible={visible} animationType={animationType}>
+      <TouchableWithoutFeedback>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.container}>
               {title && <Text style={styles.title}>{title}</Text>}
 
               {children}
-
-              <Pressable onPress={onClose} style={styles.closeButton}>
-                <Text style={styles.closeText}>Close</Text>
-              </Pressable>
             </View>
           </TouchableWithoutFeedback>
         </View>

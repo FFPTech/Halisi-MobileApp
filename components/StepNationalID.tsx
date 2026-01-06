@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   closeShowModalNotFound,
   closeValidModal,
+  openShowCameraComponent,
   queryDB,
   verifyNIN,
 } from '../features/farmerSlice'
@@ -62,13 +63,16 @@ export default function StepNationalId({
   errors = {},
 }: StepNationalIdProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { apiCallInProgress, showModalNotFound, showModalValid } = useSelector(
-    (state: any) => state.farmer
-  )
+  const {
+    apiCallInProgress,
+    showModalNotFound,
+    showModalValid,
+    showcameraComponent,
+  } = useSelector((state: any) => state.farmer)
   // const agent = useSelector((state) => state.user)
   // console.log(agent)
 
-  const [showcameraComponent, setShowCameraComponent] = useState(false)
+  // const [showcameraComponent, setShowCameraComponent] = useState(false)
   // const {
   //   verify_nin,
   //   loadingVerifyNiN,
@@ -128,7 +132,7 @@ export default function StepNationalId({
     }
   }
   const handleCloseModal = () => {
-    setShowCameraComponent(true)
+    dispatch(openShowCameraComponent())
     dispatch(closeValidModal())
   }
 
@@ -188,10 +192,7 @@ export default function StepNationalId({
               numbersOnly // <-- show error under input
             />
           </View>
-          <AppModal
-            visible={showModalNotFound}
-            onClose={() => dispatch(closeShowModalNotFound())}
-          >
+          <AppModal visible={showModalNotFound}>
             <Text style={{ textAlign: 'center' }}>
               This National Identification Number is not found in the Population
               Registration System. To continue using the app, you can either
@@ -200,24 +201,26 @@ export default function StepNationalId({
               Kenyan Population Registration System and then try again in
               Halisi.
             </Text>
+            <TouchableOpacity
+              onPress={() => dispatch(closeShowModalNotFound())}
+            >
+              <Text>ok</Text>
+            </TouchableOpacity>
           </AppModal>
           <AppModal visible={showModalValid}>
-            <View
+            <Text
               style={{
-                flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: 16,
               }}
             >
-              <Text style={{ textAlign: 'center' }}>
-                The National Identification Number is valid but not yet
-                registered. Please proceed with the registration process
-              </Text>
-              <TouchableOpacity onPress={handleCloseModal}>
-                <Text>Ok</Text>
-              </TouchableOpacity>
-            </View>
+              The National Identification Number is valid but not yet
+              registered. Please proceed with the registration process
+            </Text>
+            <TouchableOpacity onPress={handleCloseModal}>
+              <Text style={{ textAlign: 'center', marginTop: 10 }}>Ok</Text>
+            </TouchableOpacity>
           </AppModal>
           <View
             style={{

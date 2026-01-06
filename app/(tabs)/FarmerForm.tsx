@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 
 import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
 import { AppModal } from '../../components/AppModal'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { MultiStepComponent } from '../../components/MultiStep'
@@ -24,28 +25,24 @@ import { useUser } from '../../Hooks/useUserGlobal'
 const logoAsset = require('../../assets/images/halisi-logo.png')
 
 export default function RegisterFarmers() {
+  const dispatch = useDispatch()
+  const { agent, consent } = useSelector((state: any) => state.user)
+  const { farmerData, operation } = useSelector((state: any) => state.farmer)
+  console.log(farmerData)
+
   const {
-    saveFarmer,
     saveLivestock,
     registerNewLivestock,
     step,
     setStep,
-    agent,
-    callPerformanceMetrics,
-    farmerData,
     writeToRecord,
     box,
-    operation,
-    handleFarmerForm,
     callPerformanceMetricsForLivestock,
     loading,
     ratings,
-    farmerImg,
     setFarmerImg,
-    farmerPayload,
-    setFarmerPayload,
-    messageDescription,
     showModalNationalIdNotRegistered,
+    record: recordId,
   } = useUser()
   const cities = {
     Kenya: ['Nairobi', 'Mombasa', 'Kisumu'],
@@ -69,7 +66,6 @@ export default function RegisterFarmers() {
   const [dob, setDob] = useState<Date | null>(null)
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
-  const [email, setEmail] = useState('')
   const [nationalId, setNationalId] = useState('')
   const [address, setAddress] = useState('')
   const [verify, setVerified] = useState(false)
@@ -95,8 +91,60 @@ export default function RegisterFarmers() {
   const [isSuccess, setIsSuccess] = useState(false)
   const base64Header = 'data:image/jpeg;base64,'
   const [showOperation, setShowOperation] = useState(false)
+  const [showAPiMessage, setShowApiMessage] = useState('')
+  const [loadingFarmerRegApi, setLoadingFarmerRegApi] = useState(false)
+  // const [showFarmerRegistered, setShowFarmerRegistered] = useState(false)
 
   // console.log(photoBase64);
+
+  const handleFarmerForm = async (apidata) => {
+    try {
+      console.log('Starting API call')
+      setLoadingFarmerRegApi(false)
+      console.log('record ID', recordId)
+      console.log('operation', operation)
+      // console.log('UUID', farmerData.identifier)
+      console.log('agent data', agent.agent_id, agent.company_id)
+
+      let updatedSubmitJsonData = {}
+      updatedSubmitJsonData = Object.assign({}, apidata)
+      let data = {
+        record: updatedSubmitJsonData,
+        record_id: recordId,
+        env: 'Qua',
+        operation: operation,
+        uuid: '',
+        agent_id: agent.agent_id,
+        institution_id: agent.company_id,
+      }
+      console.log(data)
+      const response = await axios.post(
+        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer',
+        data
+      )
+
+      const res = response.data
+      console.log(res)
+
+      if (res.success) {
+        Alert.alert('Successfully registered')
+      }
+    } catch (error) {
+      setLoadingFarmerRegApi(false)
+      console.log('There was an error', error)
+      console.log('There was an error', error)
+
+      Alert.alert(
+        'There was an error',
+        error?.response?.data?.message ||
+          error.message ||
+          'Something went wrong'
+      )
+    }
+  }
+  if (loadingFarmerRegApi) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
 
   if (ratings) {
     return <RatingScreen />
@@ -128,31 +176,67 @@ export default function RegisterFarmers() {
   }
 
   const apidata = {
-    firstName,
-    lastName,
-    phone,
-    gender,
-    country,
-    city,
-    nationalId,
-    address,
-    verify,
-    monthlyIncome,
-    isMemberCooperative,
-    nameOfCooperative,
-    experience,
-    ageCategory,
-    schooling,
-    accommodation,
-    residentialStatus,
-    tenureWithFinancialInstitution,
-    annualIncome,
-    farmerKRAPin,
+    farmer_firstname: firstName,
+    farmer_surname: lastName,
+    farmer_national_id: nationalId,
+    farmer_county: city,
+    farmer_mobile_number: phone,
+    farmer_monthly_income: monthlyIncome,
+    farmer_farm_membership: isMemberCooperative,
+    farmer_experience: experience,
+    farmer_gender: gender,
+    farmer_age_category: ageCategory,
+    farmer_schooling: schooling,
+    farmer_place_of_living: accommodation,
+    farmer_residential_status: residentialStatus,
+    farmer_type_of_customer: tenureWithFinancialInstitution,
+    farmer_annual_income: annualIncome,
+    farmer_country: country,
+    kra_pin: farmerKRAPin,
+    consent: consent,
+    agent_id: agent.agent_id,
+    institution_id: agent.company_id,
+    agent_name: agent.name,
+    agent_institution: agent.institutions[0],
+    agent_email: agent.mic_email_id,
+    agent_verified_email: agent.mic_email_id,
+  }
+
+  const callPerformanceMetrics = async (type, response) => {
+    try {
+      const payload = {
+        record: {
+          agent_id: agent.agent_id,
+          institution_id: agent.company_id,
+          request_source: 'Halisi_V1.0',
+          API_function: type === 'verify' ? 'VerifyFarmer' : 'EnrollFarmer',
+          API_verification_result: type === 'verify' ? response.match : null,
+          Manual_verification_result: null,
+          timeStamp: response.timestamp,
+          API_verification_score: response.score ?? null,
+          API_Deduplication_result:
+            type === 'enroll' ? response.dedup_result : null,
+          API_Deduplication_score:
+            type === 'enroll' ? response.dedup_score : null,
+        },
+        env: 'Qua',
+      }
+
+      await axios.post(
+        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/getperformancemetrics',
+        payload
+      )
+    } catch (err) {
+      console.error('Error fetching performance metrics:', err)
+    }
   }
 
   const handlefarmerRegister = () => {
+    console.log('Sending request')
+
     if (!validateStep()) return
     handleFarmerForm(apidata)
+    console.log('request sent')
     setShowOperation(true)
   }
 
@@ -211,6 +295,10 @@ export default function RegisterFarmers() {
     return <LoadingSpinner size='large' color='#2e7d32' />
   }
 
+  if (apiCallInProgress) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
+
   const nextStep = () => {
     if (validateStep()) {
       if (step === 2) {
@@ -220,15 +308,16 @@ export default function RegisterFarmers() {
       }
     }
   }
+
+  //handleSubmit function for farmer verification and enrollment
   const handleSubmit = () => {
     setApiCallInProgress(true)
     setIsSubmit(true)
-    console.log('Hello')
+    console.log('Hello world')
     // console.log("No photo",photoBase64);
     if (!photoBase64) {
       console.log('No photo', photoBase64)
       // photoBase64
-
       Alert.alert('Please take a picture')
       setIsSuccess(false)
       // Dispatch action to save res object
@@ -271,10 +360,11 @@ export default function RegisterFarmers() {
             // setTotalEnrollTimeFarmer(total);
             if (humanVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-              setPhotoUri(base64Header + humanVerifyAPIResponse.image)
+              // setPhotoUri(base64Header + humanVerifyAPIResponse.image)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
               setIsSuccess(false)
+              Alert.alert('Verification Failed', 'Face does not match')
               // setShowFaceMatchNo(true);
             } else if (humanVerifyAPIResponse.match === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
@@ -293,6 +383,7 @@ export default function RegisterFarmers() {
           .catch((err) => {
             if (err.response.status === 501 || err.response.status === 404)
               setApiCallInProgress(false)
+            Alert.alert(err.message)
             setIsSuccess(false)
             // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
             // setFaceNotDetected(true);
@@ -321,6 +412,9 @@ export default function RegisterFarmers() {
             callPerformanceMetrics('enroll', humanEnrollAPIResponse)
             // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
             // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
+            setPhotoUri(base64Header + humanEnrollAPIResponse.image)
+            Alert.alert(data.data.message)
+            setShowApiMessage(data.data.message)
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
             // setTotalEnrollTimeFarmer(total);
@@ -339,6 +433,7 @@ export default function RegisterFarmers() {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
                 setApiCallInProgress(false)
                 setIsSuccess(false)
+                setShowApiMessage(data.data.message)
                 // setFaceNotDetected(true);
               } else {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
@@ -346,8 +441,11 @@ export default function RegisterFarmers() {
                 // setSuccessfulAPIcall(true);
                 writeToRecord(humanEnrollAPIResponse)
                 setIsSuccess(true)
-                Alert.alert(data.data.message)
-                setStep(2)
+                // Alert.alert(data.data.message)
+                //add description
+                setShowApiMessage(data.data.message)
+                setPhotoUri(base64Header + humanEnrollAPIResponse.image)
+                // setStep(2)
                 // setShowEnrolledMessage(true);
               }
             }
@@ -357,6 +455,7 @@ export default function RegisterFarmers() {
               setIsSuccess(false)
             setApiCallInProgress(false)
             console.log('There was an error', err)
+            Alert.alert(err.message)
 
             //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
             // setFaceNotDetected(true);
@@ -511,6 +610,11 @@ export default function RegisterFarmers() {
   }
   const prevStep = () => setStep(step - 1)
 
+  const handleAction = () => {
+    setIsSuccess(false)
+    setStep(2)
+  }
+
   // Save data to AsyncStorage
 
   // --- PDF Certificate download (cross-platform) ---
@@ -581,7 +685,6 @@ export default function RegisterFarmers() {
   //     } else {
   //       console.log("handleDownload: using photo uri:", photoSrc);
   //     }
-
   //     const html = `
   //       <!doctype html>
   //       <html>
@@ -642,7 +745,6 @@ export default function RegisterFarmers() {
   //           <div class="card">
   //             <div class="header">
   //               ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
-
   //               <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
   //               <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
   //             </div>
@@ -755,20 +857,20 @@ export default function RegisterFarmers() {
   // };
 
   // small helpers for safety
-  function escapeHtml(input: string | undefined | null) {
-    if (!input) return ''
-    return input
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-  }
+  // function escapeHtml(input: string | undefined | null) {
+  //   if (!input) return ''
+  //   return input
+  //     .replace(/&/g, '&amp;')
+  //     .replace(/</g, '&lt;')
+  //     .replace(/>/g, '&gt;')
+  //     .replace(/"/g, '&quot;')
+  //     .replace(/'/g, '&#039;')
+  // }
 
-  function sanitizeFileName(input: string | undefined | null) {
-    if (!input) return 'unknown'
-    return input.replace(/[^a-z0-9_\-]/gi, '_')
-  }
+  // function sanitizeFileName(input: string | undefined | null) {
+  //   if (!input) return 'unknown'
+  //   return input.replace(/[^a-z0-9_\-]/gi, '_')
+  // }
 
   if (registerNewLivestock) {
     return <RegisterAnotherLivestockScreen />
@@ -974,11 +1076,11 @@ export default function RegisterFarmers() {
           </View>
         )}
       </ScrollView>
-      <AppModal visible={showModalNationalIdNotRegistered}>
-        <Text>
-          This National Identification number is valid but not yet registered.
-          Please proceed with the registration process.
-        </Text>
+      <AppModal visible={isSuccess}>
+        <Text>{showAPiMessage}</Text>
+        <TouchableOpacity onPress={handleAction}>
+          <Text>OK</Text>
+        </TouchableOpacity>
       </AppModal>
     </View>
   )

@@ -41,6 +41,7 @@ interface UserState {
   successMsg: string | null
   errorMsg: string | null
   signInModal: boolean
+  consent: boolean
 }
 
 const initialState: UserState = {
@@ -69,6 +70,7 @@ const initialState: UserState = {
   successMsg: null,
   errorMsg: null,
   signInModal: false,
+  consent: false,
 }
 
 // Thunk
@@ -158,6 +160,9 @@ const userSlice = createSlice({
     removeSignInModal(state) {
       state.signInModal = false
     },
+    setConsent(state, action) {
+      state.consent = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -179,7 +184,7 @@ const userSlice = createSlice({
           state.companyData = action.payload.companyData
           state.successMsg = 'Login successful'
           state.signInModal = true
-          console.log(state.agent)
+          // console.log(state.agent)
         }
       )
       .addCase(signInWithGoogle.rejected, (state, action) => {
@@ -206,5 +211,6 @@ const userSlice = createSlice({
   },
 })
 
-export const { clearUserState, removeSignInModal } = userSlice.actions
+export const { clearUserState, removeSignInModal, setConsent } =
+  userSlice.actions
 export default userSlice.reducer

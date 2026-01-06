@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 // import { useSQLiteContext } from 'expo-sqlite'
 import { createContext, useState } from 'react'
 import { Alert } from 'react-native'
-import { getCompanyData, handleLoginAPI } from '../Hooks/Api/Auth/HandleLogin'
+import { getCompanyData } from '../Hooks/Api/Auth/HandleLogin'
 
 // ---------------------------
 // Context
@@ -105,67 +105,67 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
   const [signingIn, setSigningIn] = useState(false)
 
   //Handle Google Sign-In
-  const handleSignIn = async () => {
-    if (signingIn) return
-    setSigningIn(true)
-    try {
-      await GoogleSignin.hasPlayServices()
-      setLoading(true)
-      const result = await GoogleSignin.signIn()
-      const profile = result.data.user
-      const userData = {
-        email: profile.email,
-        name: profile.name,
-        google_id: profile.id,
-        role: 'field_officer',
-        image: profile.photo ?? '',
-      }
-      const userDetails = await handleLoginAPI(userData.email) // Call the login API
-      // console.log(userDetails)
+  // const handleSignIn = async () => {
+  //   if (signingIn) return
+  //   setSigningIn(true)
+  //   try {
+  //     await GoogleSignin.hasPlayServices()
+  //     setLoading(true)
+  //     const result = await GoogleSignin.signIn()
+  //     const profile = result.data.user
+  //     const userData = {
+  //       email: profile.email,
+  //       name: profile.name,
+  //       google_id: profile.id,
+  //       role: 'field_officer',
+  //       image: profile.photo ?? '',
+  //     }
+  //     const userDetails = await handleLoginAPI(userData.email) // Call the login API
+  //     // console.log(userDetails)
 
-      if (!userDetails.status) {
-        Alert.alert('Login Failed', 'Your account is not approved.')
-        setSigningIn(false)
-        return
-      }
-      setAgent({
-        company_id: userDetails.company_id,
-        institutions: userDetails.institutions,
-        mic_email_id: userDetails.mic_email_id,
-        name: userDetails.name,
-        national_id: userDetails.national_id,
-        mic_name: userDetails.mic_name,
-        registration_number: userDetails.registration_number,
-        role: userDetails.role,
-        status: userDetails.status,
-        agent_id: userDetails.user_id,
-        image: userData.image,
-      })
-      // console.log(userDetails);
+  //     if (!userDetails.status) {
+  //       Alert.alert('Login Failed', 'Your account is not approved.')
+  //       setSigningIn(false)
+  //       return
+  //     }
+  //     setAgent({
+  //       company_id: userDetails.company_id,
+  //       institutions: userDetails.institutions,
+  //       mic_email_id: userDetails.mic_email_id,
+  //       name: userDetails.name,
+  //       national_id: userDetails.national_id,
+  //       mic_name: userDetails.mic_name,
+  //       registration_number: userDetails.registration_number,
+  //       role: userDetails.role,
+  //       status: userDetails.status,
+  //       agent_id: userDetails.user_id,
+  //       image: userData.image,
+  //     })
+  //     // console.log(userDetails);
 
-      // setUser(userData);
-      // Alert.alert(
-      //   'Welcome! You are authenticated and ready to go. Feel free to proceed.'
-      // )
-      setLoading(false)
-      setSignInModal(true)
-      // router.replace('/FillForm')
-      // console.log(userDetails.institutions[0],userDetails.user_id,userDetails.company_id);
+  //     // setUser(userData);
+  //     // Alert.alert(
+  //     //   'Welcome! You are authenticated and ready to go. Feel free to proceed.'
+  //     // )
+  //     setLoading(false)
+  //     setSignInModal(true)
+  //     // router.replace('/FillForm')
+  //     // console.log(userDetails.institutions[0],userDetails.user_id,userDetails.company_id);
 
-      fetchCompanyData(
-        userDetails.institutions[0],
-        userDetails.user_id,
-        userDetails.company_id
-      )
-    } catch (e) {
-      console.log('Google Sign-In error:', e)
-      Alert.alert('Login error', 'Google login failed')
-      setLoading(false)
-    } finally {
-      setSigningIn(false)
-      setLoading(false)
-    }
-  }
+  //     fetchCompanyData(
+  //       userDetails.institutions[0],
+  //       userDetails.user_id,
+  //       userDetails.company_id
+  //     )
+  //   } catch (e) {
+  //     console.log('Google Sign-In error:', e)
+  //     Alert.alert('Login error', 'Google login failed')
+  //     setLoading(false)
+  //   } finally {
+  //     setSigningIn(false)
+  //     setLoading(false)
+  //   }
+  // }
 
   //Get company data function
   const fetchCompanyData = async (
@@ -206,48 +206,48 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
     return countryMap[country] || ''
   }
 
-  const handleFarmerForm = async (apidata) => {
-    let updatedSubmitJsonData = {}
-    updatedSubmitJsonData = Object.assign({}, apidata)
-    let data = {
-      record: updatedSubmitJsonData,
-      record_id: record,
-      env: 'Qua',
-      operation: operation,
-      uuid: farmerData.id || '',
-      agent_id: agent.agent_id,
-      institution_id: agent.company_id,
-    }
-    console.log(data)
+  // const handleFarmerForm = async (apidata) => {
+  //   let updatedSubmitJsonData = {}
+  //   updatedSubmitJsonData = Object.assign({}, apidata)
+  //   let data = {
+  //     record: updatedSubmitJsonData,
+  //     record_id: record,
+  //     env: 'Qua',
+  //     operation: operation,
+  //     uuid: farmerData.id || '',
+  //     agent_id: agent.agent_id,
+  //     institution_id: agent.company_id,
+  //   }
+  //   console.log(data)
 
-    try {
-      setLoading(true)
+  //   try {
+  //     setLoading(true)
 
-      const response = await axios.post(
-        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer',
-        data
-      )
+  //     const response = await axios.post(
+  //       'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer',
+  //       data
+  //     )
 
-      const res = response.data
-      console.log(res)
-      setLoading(false)
-      if (res.success) {
-        Alert.alert('Successfully registered')
-      }
-    } catch (error) {
-      setLoading(false)
+  //     const res = response.data
+  //     console.log(res)
+  //     setLoading(false)
+  //     if (res.success) {
+  //       Alert.alert('Successfully registered')
+  //     }
+  //   } catch (error) {
+  //     setLoading(false)
 
-      console.log('There was an error', error)
-      console.log('There was an error', error)
+  //     console.log('There was an error', error)
+  //     console.log('There was an error', error)
 
-      Alert.alert(
-        'There was an error',
-        error?.response?.data?.message ||
-          error.message ||
-          'Something went wrong'
-      )
-    }
-  }
+  //     Alert.alert(
+  //       'There was an error',
+  //       error?.response?.data?.message ||
+  //         error.message ||
+  //         'Something went wrong'
+  //     )
+  //   }
+  // }
 
   const registerLivestockTag = async (livestockTagNumber) => {
     let data = {
@@ -489,7 +489,6 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
       value={{
         agent,
         loading,
-        handleSignIn,
         logout,
         setAgent,
         verify_nin,
@@ -509,7 +508,7 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
         box,
         setBox,
         operation,
-        handleFarmerForm,
+        // handleFarmerForm,
         callPerformanceMetricsForLivestock,
         registerLivestockTag,
         ratings,
@@ -524,6 +523,7 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
         setMessageDescription,
         showModalNationalIdNotRegistered,
         setShowModalNationalIdNotRegistered,
+        record,
       }}
     >
       {children}
