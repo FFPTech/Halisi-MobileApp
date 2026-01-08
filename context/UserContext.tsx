@@ -411,74 +411,6 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
     }
   }
   //write to DB
-  const writeToRecord = (apidata, operation) => {
-    let updatedSubmitJsonData = {}
-
-    updatedSubmitJsonData = Object.assign({}, apidata, {
-      consent: true,
-      agent_name: agent.name ?? '',
-      agent_institution: agent.institutions[0] ?? '',
-      agent_email: agent?.mic_email_id ?? '',
-      agent_verified_email: agent?.mic_email_id ?? false,
-      agent_id: agent.agent_id ?? '',
-      institution_id: agent.company_id ?? '',
-
-      // Conditionally add fields:
-      ...(operation === 'register' && agent.role === 'field_officer'
-        ? {
-            agent_id_registration: agent.agent_id ?? '',
-            agent_name_registration: agent?.name ?? '',
-            agent_institution_registration: agent.institutions[0] ?? '',
-            agent_email_registration: agent.mic_email_id ?? '',
-            agent_verified_email_registration: agent?.mic_email_id ?? false,
-            agent_institution_id_registration: agent.company_id ?? '',
-          }
-        : {}),
-
-      ...(operation === 'update' && agent.role === 'field_officer'
-        ? {
-            agent_id_request: agent.agent_id ?? '',
-            agent_name_request: agent?.name ?? '',
-            agent_institution_request: agent.institutions[0] ?? '',
-            agent_email_request: agent?.mic_email_id ?? '',
-            agent_verified_email_request: agent?.mic_email_id ?? false,
-            agent_institution_id_request: agent.company_id ?? '',
-          }
-        : {}),
-
-      ...(operation === 'update' && agent.role === 'veterinarian'
-        ? {
-            veterinarian_id: agent.agent_id ?? '',
-            veterinarian_name_request: agent?.name ?? '',
-            veterinarian_institution_request: agent.institutions[0] ?? '',
-            veterinarian_email_request: agent?.mic_email_id ?? '',
-            veterinarian_verified_email_request: agent?.mic_email_id ?? false,
-            veterinarian_institution_id_request: agent.company_id ?? '',
-          }
-        : {}),
-    })
-    let data = {
-      record: updatedSubmitJsonData,
-      env: 'Qua',
-    }
-
-    axios
-      .post(
-        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createfarmer',
-
-        data,
-        { timeout: 20000 }
-      )
-      .then((data) => {
-        let res = data.data
-        if (res.success) {
-          // dispatch({ type: 'SET_RECORD_ID', payload:res.record_id});
-          setRecord(res.record_id)
-        } else {
-          // setRecheckMessage(true);
-        }
-      })
-  }
 
   // ---------------------------
   // Load session on startup
@@ -504,7 +436,7 @@ export const Userprovider = ({ children }: { children: React.ReactNode }) => {
         callPerformanceMetrics,
         farmerData,
         setFarmerData,
-        writeToRecord,
+
         box,
         setBox,
         operation,

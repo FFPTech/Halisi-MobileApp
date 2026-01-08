@@ -37,7 +37,7 @@ interface FarmerState {
   showValidNINNoAlert: boolean
   showValidNINOkAlert: boolean
   showModalValid: boolean
-
+  openOperation: boolean
   error: boolean
 }
 
@@ -61,6 +61,7 @@ const initialState: FarmerState = {
   showModalValid: false,
   showcameraComponent: false,
   error: false,
+  openOperation: false,
 }
 
 /* -------------------- VERIFY NIN -------------------- */
@@ -171,6 +172,7 @@ export const queryDB = createAsyncThunk<
       )
 
       const res = response.data
+      console.log(res)
 
       if (res.identifier === null) {
         dispatch(
@@ -257,6 +259,12 @@ const farmerSlice = createSlice({
     closeValidModal(state) {
       state.showModalValid = false
     },
+    OpenOperationScreen(state, action: PayloadAction<boolean>) {
+      state.openOperation = action.payload
+    },
+    closeOperationScreen(state, action: PayloadAction<boolean>) {
+      state.openOperation = action.payload
+    },
   },
 })
 
@@ -278,6 +286,8 @@ export const {
   closeShowModalNotFound,
   openShowCameraComponent,
   closeShowCameraComponent,
+  OpenOperationScreen,
+  closeOperationScreen,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

@@ -19,15 +19,17 @@ import { RegisterAnotherLivestockScreen } from '../../components/RegisterLiveSto
 import StepLivestock from '../../components/StepLivestock'
 import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
+import { setRecordId } from '../../features/farmerSlice'
 import { useUser } from '../../Hooks/useUserGlobal'
 
 // bundled logo asset
-const logoAsset = require('../../assets/images/halisi-logo.png')
 
 export default function RegisterFarmers() {
   const dispatch = useDispatch()
   const { agent, consent } = useSelector((state: any) => state.user)
-  const { farmerData, operation } = useSelector((state: any) => state.farmer)
+  const { farmerData, operation, OpenOperationModal } = useSelector(
+    (state: any) => state.farmer
+  )
   console.log(farmerData)
 
   const {
@@ -35,7 +37,6 @@ export default function RegisterFarmers() {
     registerNewLivestock,
     step,
     setStep,
-    writeToRecord,
     box,
     callPerformanceMetricsForLivestock,
     loading,
@@ -63,14 +64,14 @@ export default function RegisterFarmers() {
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
   const [gender, setGender] = useState('')
-  const [dob, setDob] = useState<Date | null>(null)
+
   const [country, setCountry] = useState('')
   const [city, setCity] = useState('')
   const [nationalId, setNationalId] = useState('')
-  const [address, setAddress] = useState('')
-  const [verify, setVerified] = useState(false)
+
   const [monthlyIncome, setMonthlyIncome] = useState('')
   const [isMemberCooperative, setIsMemberCooperative] = useState('')
+  const [county, setCounty] = useState('')
 
   const [nameOfCooperative, setNameOfCooperative] = useState('')
   const [experience, setExperience] = useState()
@@ -82,6 +83,7 @@ export default function RegisterFarmers() {
     useState()
   const [annualIncome, setAnnualIncome] = useState()
   const [farmerKRAPin, setFarmerKRApin] = useState('')
+  const [rccm_number, setRCCMNumber] = useState('')
   const [livestockPhotoUri, setLivestockPhotoUri] = useState<string | null>(
     null
   )
@@ -105,7 +107,6 @@ export default function RegisterFarmers() {
       console.log('operation', operation)
       // console.log('UUID', farmerData.identifier)
       console.log('agent data', agent.agent_id, agent.company_id)
-
       let updatedSubmitJsonData = {}
       updatedSubmitJsonData = Object.assign({}, apidata)
       let data = {
@@ -129,6 +130,7 @@ export default function RegisterFarmers() {
       if (res.success) {
         Alert.alert('Successfully registered')
       }
+      dispatch(OpenOperationModal(true))
     } catch (error) {
       setLoadingFarmerRegApi(false)
       console.log('There was an error', error)
@@ -142,6 +144,76 @@ export default function RegisterFarmers() {
       )
     }
   }
+
+  const writeToRecord = (apidata) => {
+    let updatedSubmitJsonData = {}
+
+    updatedSubmitJsonData = Object.assign({}, apidata, {
+      consent: true,
+      agent_name: agent.name ?? '',
+      agent_institution: agent.institutions[0] ?? '',
+      agent_email: agent?.mic_email_id ?? '',
+      agent_verified_email: agent?.mic_email_id ?? false,
+      agent_id: agent.agent_id ?? '',
+      institution_id: agent.company_id ?? '',
+
+      // Conditionally add fields:
+      ...(operation === 'register' && agent.role === 'field_officer'
+        ? {
+            agent_id_registration: agent.agent_id ?? '',
+            agent_name_registration: agent?.name ?? '',
+            agent_institution_registration: agent.institutions[0] ?? '',
+            agent_email_registration: agent.mic_email_id ?? '',
+            agent_verified_email_registration: agent?.mic_email_id ?? false,
+            agent_institution_id_registration: agent.company_id ?? '',
+          }
+        : {}),
+
+      ...(operation === 'update' && agent.role === 'field_officer'
+        ? {
+            agent_id_request: agent.agent_id ?? '',
+            agent_name_request: agent?.name ?? '',
+            agent_institution_request: agent.institutions[0] ?? '',
+            agent_email_request: agent?.mic_email_id ?? '',
+            agent_verified_email_request: agent?.mic_email_id ?? false,
+            agent_institution_id_request: agent.company_id ?? '',
+          }
+        : {}),
+
+      ...(operation === 'update' && agent.role === 'veterinarian'
+        ? {
+            veterinarian_id: agent.agent_id ?? '',
+            veterinarian_name_request: agent?.name ?? '',
+            veterinarian_institution_request: agent.institutions[0] ?? '',
+            veterinarian_email_request: agent?.mic_email_id ?? '',
+            veterinarian_verified_email_request: agent?.mic_email_id ?? false,
+            veterinarian_institution_id_request: agent.company_id ?? '',
+          }
+        : {}),
+    })
+    let data = {
+      record: updatedSubmitJsonData,
+      env: 'Qua',
+    }
+
+    axios
+      .post(
+        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createfarmer',
+
+        data,
+        { timeout: 20000 }
+      )
+      .then((data) => {
+        let res = data.data
+        if (res.success) {
+          // dispatch({ type: 'SET_RECORD_ID', payload:res.record_id});
+          dispatch(setRecordId(res.record_id))
+        } else {
+          // setRecheckMessage(true);
+        }
+      })
+  }
+
   if (loadingFarmerRegApi) {
     return <LoadingSpinner size='large' color='#2e7d32' />
   }
@@ -151,28 +223,32 @@ export default function RegisterFarmers() {
   }
 
   const handleLivestockSubmit = async () => {
-    if (!livestockTag.trim()) {
-      Alert.alert('Error', 'Livestock tag is required')
-      return
+    try {
+      if (!livestockTag.trim()) {
+        Alert.alert('Error', 'Livestock tag is required')
+        return
+      }
+
+      if (!livestockPhotoUri) {
+        Alert.alert('Error', 'Please capture livestock photo')
+        return
+      }
+
+      if (!nationalId) {
+        Alert.alert('Error', 'Missing farmer ID. Please restart process.')
+        return
+      }
+
+      await saveLivestock({
+        livestock_tag: livestockTag,
+        photo_uri: livestockPhotoUri,
+        farmer_id: nationalId, // <-- Automatically added!
+      })
+
+      Alert.alert('Success', 'Livestock registered successfully!')
+    } catch (error) {
+      Alert.alert('Error registering livestock', error.message)
     }
-
-    if (!livestockPhotoUri) {
-      Alert.alert('Error', 'Please capture livestock photo')
-      return
-    }
-
-    if (!nationalId) {
-      Alert.alert('Error', 'Missing farmer ID. Please restart process.')
-      return
-    }
-
-    await saveLivestock({
-      livestock_tag: livestockTag,
-      photo_uri: livestockPhotoUri,
-      farmer_id: nationalId, // <-- Automatically added!
-    })
-
-    Alert.alert('Success', 'Livestock registered successfully!')
   }
 
   const apidata = {
@@ -193,6 +269,7 @@ export default function RegisterFarmers() {
     farmer_annual_income: annualIncome,
     farmer_country: country,
     kra_pin: farmerKRAPin,
+    rccm_number: rccm_number,
     consent: consent,
     agent_id: agent.agent_id,
     institution_id: agent.company_id,
@@ -489,10 +566,10 @@ export default function RegisterFarmers() {
         let t0 = performance.now()
         let data = {
           agent_id: agent.agent_id,
-          institution_id: agent.institution_id,
+          institution_id: agent.company_id,
           image: photoBase64,
           signature: farmerData.signature,
-          id: farmerData.id,
+          id: farmerData.identifier,
           rect: rect,
           moveable_rect: rect,
         }
@@ -515,12 +592,14 @@ export default function RegisterFarmers() {
             // setTotalEnrollTimeFarmer(total);
             if (humanVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setLivestockPhotoUri(base64Header + humanVerifyAPIResponse.image)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
               setIsSuccess(false)
               // setShowFaceMatchNo(true);
             } else if (humanVerifyAPIResponse.match === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
+              setLivestockPhotoUri(base64Header + humanVerifyAPIResponse.image)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
               setIsSuccess(true)
@@ -530,6 +609,7 @@ export default function RegisterFarmers() {
               setIsSuccess(false)
               //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
               // setFaceNotDetected(true);
+              Alert.alert('Face not detected, please try again')
             }
           })
           .catch((err) => {
@@ -583,6 +663,7 @@ export default function RegisterFarmers() {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
                 setApiCallInProgress(false)
                 setIsSuccess(false)
+                Alert.alert('Face not detected, please try again')
                 // setFaceNotDetected(true);
               } else {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanEnrollAPIResponse.image});
@@ -592,6 +673,7 @@ export default function RegisterFarmers() {
                 writeToRecord(humanEnrollAPIResponse)
                 setIsSuccess(true)
                 Alert.alert(data.data.message)
+                setShowApiMessage(data.data.message)
                 // setShowEnrolledMessage(true);
               }
             }
@@ -600,6 +682,7 @@ export default function RegisterFarmers() {
             if (err.response.status === 501 || err.response.status === 404)
               setIsSuccess(false)
             setApiCallInProgress(false)
+            Alert.alert(err.message)
             console.log('There was an error', err)
 
             //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
@@ -948,30 +1031,15 @@ export default function RegisterFarmers() {
             errors={errors}
             handleFarmerSubmit={handlefarmerRegister}
             nextStep={nextStep}
-            operation={operation}
-            setShowOperation={setShowOperation}
+            county={county}
+            setCounty={setCounty}
+            rccm_number={rccm_number}
+            setRCCMNumber={setRCCMNumber}
           />
         )
 
       case 3:
         return (
-          //           <StepOperation
-
-          //            livestocktag={livestockTag}
-          //               setLivestockTag={setLivestockTag}
-          //               errors={errors}
-          //               permission={permission}
-          //               livestockPhotoUri={livestockPhotoUri}
-          //               setLivestockPhotoUri={setLivestockPhotoUri}
-          //               setPhotoBase64s={setPhotoBase64}
-          //               requestPermission={requestPermission}
-          //               facing={facing}
-          //               toggleCameraFacing={toggleCameraFacing}
-          //               cameraRef={cameraRef}
-          //               nextStep={nextStep}
-          // handleSubmitLivestock={handleSubmitLivestock}
-
-          //      />
           <StepLivestock
             nextStep={nextStep}
             livestocktag={livestockTag}

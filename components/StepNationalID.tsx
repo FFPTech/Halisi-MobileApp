@@ -161,7 +161,10 @@ export default function StepNationalId({
               onValueChange={setCountry}
               options={[
                 { label: 'Kenya', value: 'Kenya' },
-                { label: 'Congo', value: 'Congo' },
+                {
+                  label: 'Democratic Republic of Congo',
+                  value: 'Democratic Republic of Congo',
+                },
               ]}
               error={submitted && !country ? 'Country is required' : undefined}
               // <-- show error under dropdown

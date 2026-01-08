@@ -85,7 +85,7 @@ export default function index() {
           onPress={handleLoginClick}
         />
       </View>
-      <AppModal visible={signInModal} onClose={() => {}} title=''>
+      <AppModal visible={signInModal}>
         <View>
           <Text>
             Welcome! You are authenticated and ready to go. Feel free to

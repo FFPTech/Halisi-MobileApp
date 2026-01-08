@@ -1,15 +1,36 @@
-// components/steps/StepPersonalInfo.tsx
-import { Text, View } from 'react-native'
-import { useUser } from '../Hooks/useUserGlobal'
+import { useEffect, useMemo } from 'react'
+import { View } from 'react-native'
+import { useAppSelector } from '../Hooks/hook'
 import CommonButton from './CommonButtonComponent'
 import Dropdown from './DropDown'
 import FormStepWrapper from './FormStepWrapper'
 import InputField from './InputComponent'
+import PhoneInputField from './PhoneInputComponent'
 import StepOperation from './StepOperation'
 
-const cities = {
-  Kenya: ['Nairobi', 'Mombasa', 'Kisumu'],
-  Congo: ['Kinshasa', 'Goma', 'Lubumbashi'],
+const COUNTRIES = ['Kenya', 'Democratic Republic of Congo'] as const
+type CountryType = (typeof COUNTRIES)[number]
+
+const cities: Record<CountryType, string[]> = {
+  Kenya: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'],
+  'Democratic Republic of Congo': [
+    'Kinshasa',
+    'Goma',
+    'Lubumbashi',
+    'Bukavu',
+    'Kisangani',
+  ],
+}
+
+const counties: Record<CountryType, string[]> = {
+  Kenya: ['Nairobi', 'Kiambu', 'Machakos', 'Kisumu', 'Nakuru'],
+  'Democratic Republic of Congo': [
+    'Kinshasa',
+    'Kongo Central',
+    'North Kivu',
+    'South Kivu',
+    'Haut-Katanga',
+  ],
 }
 
 export default function StepPersonalInfo({
@@ -25,6 +46,12 @@ export default function StepPersonalInfo({
   setCountry,
   city,
   setCity,
+  county,
+  setCounty,
+  accommodation,
+  setAccommodation,
+  residentialStatus,
+  setResidentialStatus,
   phone,
   setPhone,
   monthlyIncome,
@@ -39,31 +66,49 @@ export default function StepPersonalInfo({
   setAgeCategory,
   schooling,
   setSchooling,
-  accommodation,
-  setAccommodation,
-  residentialStatus,
-  setResidentialStatus,
   tenureWithFinancialInstitution,
   setTenureWithFinancialInstitution,
   annualIncome,
   setAnnualIncome,
   farmerKRAPin,
   setFarmerKRApin,
+  rccm_number,
+  setRCCMNumber,
   handleFarmerSubmit,
   nextStep,
-  setShowOperation,
-  operation,
   errors,
 }) {
-  const { showOperation } = useUser()
+  const { openOperation } = useAppSelector((state) => state.farmer)
+
+  /** ---------- ACTIVE COUNTRY (fallback to Kenya) ---------- */
+  const activeCountry: CountryType = (country || COUNTRIES[0]) as CountryType
+
+  const activeCities = useMemo(() => cities[activeCountry], [activeCountry])
+  const activeCounties = useMemo(() => counties[activeCountry], [activeCountry])
+
+  /** ---------- SET DEFAULT CITY & COUNTY ---------- */
+  useEffect(() => {
+    if (!city) setCity(activeCities[0])
+    if (!county) setCounty(activeCounties[0])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCountry])
+
+  /** ---------- PHONE PREFIX ---------- */
+  const phonePrefix =
+    activeCountry === 'Kenya'
+      ? '+254'
+      : activeCountry === 'Democratic Republic of Congo'
+      ? '+243'
+      : ''
+
   return (
     <>
-      {showOperation ? (
+      {openOperation ? (
         <StepOperation nextStep={nextStep} />
       ) : (
         <FormStepWrapper title='Step 3: Personal Information'>
-          <View style={{ marginTop: 4, flexDirection: 'column', gap: 12 }}>
-            {/* -------------------- FIRST NAME -------------------- */}
+          <View style={{ marginTop: 4, gap: 12 }}>
+            {/* FIRST NAME */}
             <InputField
               label='First Name'
               value={firstName}
@@ -71,7 +116,7 @@ export default function StepPersonalInfo({
               error={errors.firstName}
             />
 
-            {/* -------------------- LAST NAME -------------------- */}
+            {/* LAST NAME */}
             <InputField
               label='Surname'
               value={lastName}
@@ -79,159 +124,67 @@ export default function StepPersonalInfo({
               error={errors.lastName}
             />
 
-            {/* -------------------- NATIONAL ID -------------------- */}
+            {/* NATIONAL ID */}
             <InputField
               label='National ID'
               value={nationalId}
               onChangeText={setNationalId}
-              error={
-                nationalId.length === 0
-                  ? 'National ID is required'
-                  : nationalId.length > 20
-                  ? 'National ID cannot exceed 20 digits'
-                  : undefined
-              }
+              error={errors.nationalId}
             />
 
-            {/* -------------------- COUNTRY -------------------- */}
+            {/* COUNTRY */}
             <Dropdown
               label='Country'
               selectedValue={country}
-              onValueChange={setCountry}
-              options={[
-                { label: 'Kenya', value: 'Kenya' },
-                { label: 'Congo', value: 'Congo' },
-              ]}
+              onValueChange={(val) => {
+                setCountry(val)
+                setCity('')
+                setCounty('')
+                setPhone('')
+              }}
+              options={COUNTRIES.map((c) => ({
+                label: c,
+                value: c,
+              }))}
               error={!country ? 'Country is required' : undefined}
             />
 
-            {/* -------------------- CITY -------------------- */}
-            {country ? (
-              <>
-                <Dropdown
-                  label='City'
-                  selectedValue={city}
-                  onValueChange={setCity}
-                  options={(cities[country] || []).map((c) => ({
-                    label: c,
-                    value: c,
-                  }))}
-                />
-                {errors.city && (
-                  <Text style={{ color: 'red' }}>{errors.city}</Text>
-                )}
-              </>
-            ) : null}
-
-            {/* -------------------- GENDER -------------------- */}
+            {/* CITY */}
             <Dropdown
-              label='Gender'
-              selectedValue={gender}
-              onValueChange={setGender}
-              options={[
-                { label: 'Male', value: 'male' },
-                { label: 'Female', value: 'female' },
-              ]}
-            />
-            {errors.gender && (
-              <Text style={{ color: 'red' }}>{errors.gender}</Text>
-            )}
-
-            {/* -------------------- PHONE -------------------- */}
-            <InputField
-              label='Phone'
-              value={phone}
-              onChangeText={setPhone}
-              error={errors.phone}
+              label='Town / City'
+              selectedValue={city}
+              onValueChange={setCity}
+              options={activeCities.map((c) => ({
+                label: c,
+                value: c,
+              }))}
             />
 
-            {/* -------------------- MONTHLY INCOME -------------------- */}
-            <InputField
-              label='Monthly income'
-              value={monthlyIncome}
-              onChangeText={setMonthlyIncome}
-              error={errors.monthlyIncome}
-              numbersOnly
-            />
-
-            {/* -------------------- COOPERATIVE -------------------- */}
+            {/* COUNTY / PROVINCE */}
             <Dropdown
-              label='Cooperative membership'
-              selectedValue={isMemberCooperative}
-              onValueChange={setIsMemberCooperative}
-              options={[
-                { label: 'Yes', value: 'Yes' },
-                { label: 'No', value: 'No' },
-              ]}
-            />
-            {errors.isMemberCooperative && (
-              <Text style={{ color: 'red' }}>{errors.isMemberCooperative}</Text>
-            )}
-
-            {isMemberCooperative === 'Yes' && (
-              <InputField
-                label='Name of cooperative'
-                value={nameOfCooperative}
-                onChangeText={setNameOfCooperative}
-                error={errors.nameOfCooperative}
-              />
-            )}
-
-            {/* -------------------- EXPERIENCE -------------------- */}
-            <InputField
-              label='Experience (years)'
-              value={experience}
-              onChangeText={setExperience}
-              error={errors.experience}
-              numbersOnly
+              label='County / Province'
+              selectedValue={county}
+              onValueChange={setCounty}
+              options={activeCounties.map((c) => ({
+                label: c,
+                value: c,
+              }))}
             />
 
-            {/* -------------------- AGE CATEGORY -------------------- */}
+            {/* ACCOMMODATION */}
             <Dropdown
-              label='Age Category'
-              selectedValue={ageCategory}
-              onValueChange={setAgeCategory}
-              options={[
-                { label: '18-30 years old', value: '18-30 years old' },
-                { label: '30-50 years old', value: '30-50 years old' },
-                { label: '> 50 years old', value: '50 years old above' },
-              ]}
-            />
-            {errors.ageCategory && (
-              <Text style={{ color: 'red' }}>{errors.ageCategory}</Text>
-            )}
-
-            {/* -------------------- SCHOOLING -------------------- */}
-            <Dropdown
-              label='Schooling'
-              selectedValue={schooling}
-              onValueChange={setSchooling}
-              options={[
-                { label: 'literate', value: 'Primary' },
-                { label: 'Secondary', value: 'High School' },
-                { label: 'Sup', value: 'Sup' },
-              ]}
-            />
-            {errors.schooling && (
-              <Text style={{ color: 'red' }}>{errors.schooling}</Text>
-            )}
-
-            {/* -------------------- ACCOMMODATION -------------------- */}
-            <Dropdown
-              label='Select place of living'
+              label='Place of Living'
               selectedValue={accommodation}
               onValueChange={setAccommodation}
               options={[
-                { label: 'Village', value: 'village' },
+                { label: 'Village', value: 'Village' },
                 { label: 'Ward', value: 'Ward' },
                 { label: 'County', value: 'County' },
               ]}
+              error={errors.accommodation}
             />
-            {errors.accommodation && (
-              <Text style={{ color: 'red' }}>{errors.accommodation}</Text>
-            )}
 
-            {/* -------------------- RESIDENTIAL STATUS -------------------- */}
+            {/* RESIDENTIAL STATUS */}
             <Dropdown
               label='Residential Status'
               selectedValue={residentialStatus}
@@ -241,60 +194,138 @@ export default function StepPersonalInfo({
                 { label: 'Own', value: 'Own' },
                 { label: 'Live with Family', value: 'Live with Family' },
               ]}
+              error={errors.residentialStatus}
             />
-            {errors.residentialStatus && (
-              <Text style={{ color: 'red' }}>{errors.residentialStatus}</Text>
+
+            {/* GENDER */}
+            <Dropdown
+              label='Gender'
+              selectedValue={gender}
+              onValueChange={setGender}
+              options={[
+                { label: 'Male', value: 'male' },
+                { label: 'Female', value: 'female' },
+              ]}
+            />
+
+            {/* PHONE */}
+            <PhoneInputField
+              label='Phone Number'
+              prefix={phonePrefix}
+              value={phone}
+              onChangeText={setPhone}
+              numbersOnly
+              error={errors.phone}
+            />
+
+            {/* MONTHLY INCOME */}
+            <InputField
+              label={`Monthly Income (${
+                activeCountry === 'Kenya' ? 'KES' : 'USD'
+              })`}
+              value={monthlyIncome}
+              onChangeText={setMonthlyIncome}
+              numbersOnly
+              error={errors.monthlyIncome}
+            />
+
+            {/* COOPERATIVE */}
+            <Dropdown
+              label='Cooperative Membership'
+              selectedValue={isMemberCooperative}
+              onValueChange={setIsMemberCooperative}
+              options={[
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ]}
+            />
+
+            {isMemberCooperative === 'Yes' && (
+              <InputField
+                label='Name of Cooperative'
+                value={nameOfCooperative}
+                onChangeText={setNameOfCooperative}
+                error={errors.nameOfCooperative}
+              />
             )}
 
-            {/* -------------------- TENURE -------------------- */}
+            {/* EXPERIENCE */}
+            <InputField
+              label='Experience (years)'
+              value={experience}
+              onChangeText={setExperience}
+              numbersOnly
+              error={errors.experience}
+            />
+
+            {/* AGE CATEGORY */}
+            <Dropdown
+              label='Age Category'
+              selectedValue={ageCategory}
+              onValueChange={setAgeCategory}
+              options={[
+                { label: '18-30 years', value: '18-30 years' },
+                { label: '30-50 years', value: '30-50 years' },
+                { label: '50+ years', value: '50+ years' },
+              ]}
+            />
+
+            {/* SCHOOLING */}
+            <Dropdown
+              label='Schooling'
+              selectedValue={schooling}
+              onValueChange={setSchooling}
+              options={[
+                { label: 'Primary', value: 'Primary' },
+                { label: 'Secondary', value: 'Secondary' },
+                { label: 'Higher', value: 'Higher' },
+              ]}
+            />
+
+            {/* TENURE */}
             <Dropdown
               label='Customer tenure with financial institution'
               selectedValue={tenureWithFinancialInstitution}
               onValueChange={setTenureWithFinancialInstitution}
               options={[
                 { label: 'Old (5+ years)', value: 'Old(5+ years)' },
-                { label: 'New (0-5 years)', value: 'New(0-5years)' },
+                { label: 'New (0–5 years)', value: 'New(0–5 years)' },
               ]}
             />
-            {errors.tenureWithFinancialInstitution && (
-              <Text style={{ color: 'red' }}>
-                {errors.tenureWithFinancialInstitution}
-              </Text>
-            )}
 
-            {/* -------------------- ANNUAL INCOME -------------------- */}
+            {/* ANNUAL INCOME */}
             <InputField
-              label='Select Annual Income (Ksh)'
+              label={`Annual Income (${
+                activeCountry === 'Kenya' ? 'KES' : 'USD'
+              })`}
               value={annualIncome}
               onChangeText={setAnnualIncome}
-              error={errors.annualIncome}
               numbersOnly
+              error={errors.annualIncome}
             />
 
-            {/* -------------------- KRA PIN -------------------- */}
-            <InputField
-              label='Farmer KRA PIN'
-              value={farmerKRAPin}
-              onChangeText={setFarmerKRApin}
-              error={errors.farmerKRAPin}
-            />
+            {/* COUNTRY-SPECIFIC ID */}
+            {activeCountry === 'Kenya' && (
+              <InputField
+                label='Farmer KRA PIN'
+                value={farmerKRAPin}
+                onChangeText={setFarmerKRApin}
+                error={errors.farmerKRAPin}
+              />
+            )}
+
+            {activeCountry === 'Democratic Republic of Congo' && (
+              <InputField
+                label='Farmer RCCM Number'
+                value={rccm_number}
+                onChangeText={setRCCMNumber}
+                error={errors.rccm_number}
+              />
+            )}
           </View>
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignContent: 'center',
-            }}
-          >
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <CommonButton title='Register' onPress={handleFarmerSubmit} />
-            </View>
+
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <CommonButton title='Register' onPress={handleFarmerSubmit} />
           </View>
         </FormStepWrapper>
       )}
