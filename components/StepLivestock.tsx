@@ -1,5 +1,12 @@
-import React, { useState } from 'react'
-import { View } from 'react-native'
+import React from 'react'
+import { Text, TouchableOpacity, View } from 'react-native'
+import { useSelector } from 'react-redux'
+import {
+  queryLivestockDB,
+  setShowGoToRegistration,
+} from '../features/farmerSlice'
+import { useAppDispatch } from '../Hooks/hook'
+import { AppModal } from './AppModal'
 import CommonButton from './CommonButtonComponent'
 import FormStepWrapper from './FormStepWrapper'
 import InputField from './InputComponent'
@@ -34,11 +41,29 @@ const StepLivestock = ({
   nextStep: () => void
   handleSubmitLivestock
 }) => {
-  const [showCameraComponent, SetShowCameraComponent] = useState(false)
+  const dispatch = useAppDispatch()
+  const agent = useSelector((state: any) => state.user.agent)
+  // const [showCameraComponent, SetShowCameraComponent] = useState(false)
+  const {
+    showGoToVerification,
+    livestockMessage,
+    showGoToRegistration,
+    livestockTagModal,
+  } = useSelector((state: any) => state.farmer)
+
+  const [errorMessage, setErrorMessage] = React.useState('')
+
+  const handleFormSubmit = () => {
+    if (!livestocktag) {
+      setErrorMessage('Please enter a livestock tag number')
+      return
+    }
+    dispatch(queryLivestockDB({ livestockTagNumber: livestocktag, agent }))
+  }
 
   return (
     <>
-      {showCameraComponent ? (
+      {showGoToRegistration ? (
         <StepCamera
           permission={permission}
           requestPermission={requestPermission}
@@ -56,7 +81,7 @@ const StepLivestock = ({
         <FormStepWrapper title={'Livestock Authentication'}>
           <InputField
             onChangeText={setLivestockTag}
-            error={errors.livestocktag}
+            error={errorMessage}
             value={livestocktag}
             label='Livestock Tag Number'
             placeholder='Enter Tag Number'
@@ -69,11 +94,16 @@ const StepLivestock = ({
               alignItems: 'center',
             }}
           >
-            <CommonButton
-              onPress={() => SetShowCameraComponent(true)}
-              title='Submit'
-            />
+            <CommonButton onPress={handleFormSubmit} title='Submit' />
           </View>
+          <AppModal visible={livestockTagModal}>
+            <Text style={{ textAlign: 'center' }}>{livestockMessage}</Text>
+            <TouchableOpacity
+              onPress={() => dispatch(setShowGoToRegistration(true))}
+            >
+              <Text style={{ textAlign: 'center', marginTop: 10 }}>Ok</Text>
+            </TouchableOpacity>
+          </AppModal>
         </FormStepWrapper>
       )}
     </>

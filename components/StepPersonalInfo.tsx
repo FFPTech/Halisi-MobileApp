@@ -1,6 +1,12 @@
 import { useEffect, useMemo } from 'react'
-import { View } from 'react-native'
+import { Text, View } from 'react-native'
+import { useDispatch } from 'react-redux'
+import {
+  OpenOperationScreen,
+  setCloseFarmerRegistrationModal,
+} from '../features/farmerSlice'
 import { useAppSelector } from '../Hooks/hook'
+import { AppModal } from './AppModal'
 import CommonButton from './CommonButtonComponent'
 import Dropdown from './DropDown'
 import FormStepWrapper from './FormStepWrapper'
@@ -12,13 +18,29 @@ const COUNTRIES = ['Kenya', 'Democratic Republic of Congo'] as const
 type CountryType = (typeof COUNTRIES)[number]
 
 const cities: Record<CountryType, string[]> = {
-  Kenya: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret'],
+  Kenya: [
+    'Nairobi',
+    'Mombasa',
+    'Kisumu',
+    'Nakuru',
+    'Eldoret',
+    'Thika',
+    'Kitale',
+    'garissa',
+    'Machakos',
+    'Naivasha',
+  ],
   'Democratic Republic of Congo': [
     'Kinshasa',
     'Goma',
     'Lubumbashi',
     'Bukavu',
     'Kisangani',
+    'Kananga',
+    'Mbuji-Mayi',
+    'Likasi',
+    'Kolwezi',
+    'Bunia',
   ],
 }
 
@@ -30,6 +52,11 @@ const counties: Record<CountryType, string[]> = {
     'North Kivu',
     'South Kivu',
     'Haut-Katanga',
+    'Lualaba',
+    'Tshopo',
+    'Haut-Lomami',
+    'Ituri',
+    'Kwilu',
   ],
 }
 
@@ -78,8 +105,15 @@ export default function StepPersonalInfo({
   nextStep,
   errors,
 }) {
-  const { openOperation } = useAppSelector((state) => state.farmer)
+  const { openOperation, farmerRegistrationModal } = useAppSelector(
+    (state) => state.farmer
+  )
 
+  const dispatch = useDispatch()
+  const gotoNextStep = () => {
+    dispatch(setCloseFarmerRegistrationModal(false))
+    dispatch(OpenOperationScreen(true))
+  }
   /** ---------- ACTIVE COUNTRY (fallback to Kenya) ---------- */
   const activeCountry: CountryType = (country || COUNTRIES[0]) as CountryType
 
@@ -149,17 +183,6 @@ export default function StepPersonalInfo({
               error={!country ? 'Country is required' : undefined}
             />
 
-            {/* CITY */}
-            <Dropdown
-              label='Town / City'
-              selectedValue={city}
-              onValueChange={setCity}
-              options={activeCities.map((c) => ({
-                label: c,
-                value: c,
-              }))}
-            />
-
             {/* COUNTY / PROVINCE */}
             <Dropdown
               label='County / Province'
@@ -171,41 +194,15 @@ export default function StepPersonalInfo({
               }))}
             />
 
-            {/* ACCOMMODATION */}
+            {/* CITY */}
             <Dropdown
-              label='Place of Living'
-              selectedValue={accommodation}
-              onValueChange={setAccommodation}
-              options={[
-                { label: 'Village', value: 'Village' },
-                { label: 'Ward', value: 'Ward' },
-                { label: 'County', value: 'County' },
-              ]}
-              error={errors.accommodation}
-            />
-
-            {/* RESIDENTIAL STATUS */}
-            <Dropdown
-              label='Residential Status'
-              selectedValue={residentialStatus}
-              onValueChange={setResidentialStatus}
-              options={[
-                { label: 'Rent', value: 'Rent' },
-                { label: 'Own', value: 'Own' },
-                { label: 'Live with Family', value: 'Live with Family' },
-              ]}
-              error={errors.residentialStatus}
-            />
-
-            {/* GENDER */}
-            <Dropdown
-              label='Gender'
-              selectedValue={gender}
-              onValueChange={setGender}
-              options={[
-                { label: 'Male', value: 'male' },
-                { label: 'Female', value: 'female' },
-              ]}
+              label='Town'
+              selectedValue={city}
+              onValueChange={setCity}
+              options={activeCities.map((c) => ({
+                label: c,
+                value: c,
+              }))}
             />
 
             {/* PHONE */}
@@ -221,7 +218,7 @@ export default function StepPersonalInfo({
             {/* MONTHLY INCOME */}
             <InputField
               label={`Monthly Income (${
-                activeCountry === 'Kenya' ? 'KES' : 'USD'
+                activeCountry === 'Kenya' ? 'KSH' : 'USD'
               })`}
               value={monthlyIncome}
               onChangeText={setMonthlyIncome}
@@ -258,6 +255,17 @@ export default function StepPersonalInfo({
               error={errors.experience}
             />
 
+            {/* GENDER */}
+            <Dropdown
+              label='Gender'
+              selectedValue={gender}
+              onValueChange={setGender}
+              options={[
+                { label: 'Male', value: 'male' },
+                { label: 'Female', value: 'female' },
+              ]}
+            />
+
             {/* AGE CATEGORY */}
             <Dropdown
               label='Age Category'
@@ -276,10 +284,38 @@ export default function StepPersonalInfo({
               selectedValue={schooling}
               onValueChange={setSchooling}
               options={[
+                { label: 'Illiterate', value: 'Illiterate' },
                 { label: 'Primary', value: 'Primary' },
                 { label: 'Secondary', value: 'Secondary' },
-                { label: 'Higher', value: 'Higher' },
+                { label: 'High School', value: 'High School' },
+                { label: 'Sup', value: 'Sup' },
               ]}
+            />
+
+            {/* ACCOMMODATION */}
+            <Dropdown
+              label='Place of Living'
+              selectedValue={accommodation}
+              onValueChange={setAccommodation}
+              options={[
+                { label: 'Village', value: 'Village' },
+                { label: 'Ward', value: 'Ward' },
+                { label: 'County', value: 'County' },
+              ]}
+              error={errors.accommodation}
+            />
+
+            {/* RESIDENTIAL STATUS */}
+            <Dropdown
+              label='Residential Status'
+              selectedValue={residentialStatus}
+              onValueChange={setResidentialStatus}
+              options={[
+                { label: 'Rent', value: 'Rent' },
+                { label: 'Own', value: 'Own' },
+                { label: 'Live with Family', value: 'Live with Family' },
+              ]}
+              error={errors.residentialStatus}
             />
 
             {/* TENURE */}
@@ -326,6 +362,10 @@ export default function StepPersonalInfo({
 
           <View style={{ marginTop: 20, alignItems: 'center' }}>
             <CommonButton title='Register' onPress={handleFarmerSubmit} />
+            <AppModal visible={farmerRegistrationModal}>
+              <Text>Registration successful. Feel free to proceed.</Text>
+              <CommonButton title='OK' onPress={gotoNextStep} />
+            </AppModal>
           </View>
         </FormStepWrapper>
       )}

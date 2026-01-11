@@ -1,75 +1,88 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useUser } from "../Hooks/useUserGlobal";
+import React from 'react'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useDispatch } from 'react-redux'
+import { setCloseRegisterNewLivestock } from '../features/farmerSlice'
+import { useUser } from '../Hooks/useUserGlobal'
 
 export const RegisterAnotherLivestockScreen = () => {
-  const{step,setStep,setShowTagName,setRegisterNewLivestock,setRatings}= useUser()
-  const handleRegisterAnotherLivestock = ()=>{
+  const dispatch = useDispatch()
+
+  const { step, setStep, setShowTagName, setRegisterNewLivestock, setRatings } =
+    useUser()
+  const handleRegisterAnotherLivestock = () => {
+    dispatch(setCloseRegisterNewLivestock(false))
     setRegisterNewLivestock(false)
     setStep(3)
-    console.log("button clicked",step);
+    console.log('button clicked', step)
 
     setShowTagName(true)
   }
+
+  const handleDonotRegisterLivestock = () => {
+    setRegisterNewLivestock(false)
+    setRatings(true)
+  }
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Would you like to register another livestock?</Text>
+      <Text style={styles.title}>
+        Would you like to register another livestock?
+      </Text>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.yesButton}
-          onPress={() => handleRegisterAnotherLivestock()}
+          onPress={handleRegisterAnotherLivestock}
         >
           <Text style={styles.buttonText}>Yes</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.noButton}
-          onPress={() =>setRatings(true)}
+          onPress={handleDonotRegisterLivestock}
         >
           <Text style={styles.buttonText}>No</Text>
         </TouchableOpacity>
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default RegisterAnotherLivestockScreen;
+export default RegisterAnotherLivestockScreen
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center",
+    fontWeight: '600',
+    textAlign: 'center',
     marginBottom: 40,
-    color: "#333",
+    color: '#333',
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 20,
   },
   yesButton: {
-    backgroundColor: "green",
+    backgroundColor: 'green',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
   },
   noButton: {
-    backgroundColor: "red",
+    backgroundColor: 'red',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
   },
   buttonText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
     fontSize: 16,
   },
-});
+})

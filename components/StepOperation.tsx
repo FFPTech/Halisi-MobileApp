@@ -23,7 +23,7 @@ const StepOperation = ({ nextStep }: { nextStep: () => void }) => {
             borderRadius: 8,
             alignItems: 'center',
           }}
-          onPress={() => handleRegisterLivetock()}
+          onPress={handleRegisterLivetock}
         >
           <Text
             style={{

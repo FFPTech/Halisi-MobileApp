@@ -7,7 +7,7 @@ export default function PhoneInputField({
   onChangeText,
   error,
   numbersOnly = true,
-  prefix,
+  prefix = '',
 }: {
   label: string
   value: string
@@ -18,7 +18,7 @@ export default function PhoneInputField({
 }) {
   const [internalError, setInternalError] = useState<string | undefined>()
 
-  const MAX_LENGTH = 9
+  const MAX_LENGTH = 9 // digits without prefix
   const isValidPrefix = prefix === '+254' || prefix === '+243'
 
   const handleChange = (text: string) => {
@@ -38,8 +38,14 @@ export default function PhoneInputField({
       cleaned = cleaned.slice(0, MAX_LENGTH)
     }
 
-    onChangeText(cleaned)
+    // Add prefix to value before sending
+    onChangeText(prefix + cleaned)
   }
+
+  // Extract only the digits without prefix for internal checks
+  const digitsOnly = value.startsWith(prefix)
+    ? value.slice(prefix.length)
+    : value
 
   useEffect(() => {
     if (!prefix) {
@@ -52,19 +58,18 @@ export default function PhoneInputField({
       return
     }
 
-    if (value.length > MAX_LENGTH) {
+    if (digitsOnly.length > MAX_LENGTH) {
       setInternalError('Phone number must be 9 digits')
       return
     }
 
-    if (value.length > 0 && value.length < MAX_LENGTH) {
+    if (digitsOnly.length > 0 && digitsOnly.length < MAX_LENGTH) {
       setInternalError(undefined)
       return
     }
 
     setInternalError(undefined)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, prefix])
+  }, [digitsOnly, prefix])
 
   const showError = error || internalError
 
@@ -96,7 +101,7 @@ export default function PhoneInputField({
 
         <TextInput
           style={{ flex: 1 }}
-          value={value}
+          value={digitsOnly}
           onChangeText={handleChange}
           keyboardType='phone-pad'
           placeholder='712345678'

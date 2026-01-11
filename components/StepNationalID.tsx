@@ -69,7 +69,7 @@ export default function StepNationalId({
     showModalValid,
     showcameraComponent,
   } = useSelector((state: any) => state.farmer)
-  // const agent = useSelector((state) => state.user)
+  const agent = useSelector((state: any) => state.user.agent)
   // console.log(agent)
 
   // const [showcameraComponent, setShowCameraComponent] = useState(false)
@@ -115,6 +115,7 @@ export default function StepNationalId({
         verifyNIN({
           farmerNationalNumber: nationalId,
           selectedCountry: country,
+          agent,
         })
       )
     } else {
@@ -123,7 +124,11 @@ export default function StepNationalId({
       console.log('Not using IPRS verification')
 
       dispatch(
-        queryDB({ farmerNationalNumber: nationalId, selectedCountry: country })
+        queryDB({
+          farmerNationalNumber: nationalId,
+          selectedCountry: country,
+          agent,
+        })
       )
 
       // setLoadingVerifyNiN(false)
@@ -197,12 +202,12 @@ export default function StepNationalId({
           </View>
           <AppModal visible={showModalNotFound}>
             <Text style={{ textAlign: 'center' }}>
-              This National Identification Number is not found in the Population
+              {`This National Identification Number is not found in the Population
               Registration System. To continue using the app, you can either
               turn off the 'Use Population Registration System Verification'
               toggle and enter your ID number manually, or register with the
               Kenyan Population Registration System and then try again in
-              Halisi.
+              Halisi.`}
             </Text>
             <TouchableOpacity
               onPress={() => dispatch(closeShowModalNotFound())}
