@@ -39,6 +39,7 @@ export default function RegisterFarmers() {
     recordId,
     registerNewLivestock,
     setRegisterNewLivestock,
+    enrollDbData,
   } = useSelector((state: any) => state.farmer)
   console.log(farmerData)
 
@@ -98,6 +99,7 @@ export default function RegisterFarmers() {
   const [showOperation, setShowOperation] = useState(false)
   const [showAPiMessage, setShowApiMessage] = useState('')
   const [loadingFarmerRegApi, setLoadingFarmerRegApi] = useState(false)
+  const [isLivestockSuccess, setIsLivestockSuccess] = useState(false)
   // const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
   // const [showFarmerRegistered, setShowFarmerRegistered] = useState(false)
 
@@ -138,6 +140,7 @@ export default function RegisterFarmers() {
       }
       dispatch(setShowFarmerRegistrationModal(true))
       setLoadingFarmerRegApi(false)
+      clearFarmerForm()
     } catch (error) {
       setLoadingFarmerRegApi(false)
       console.log('There was an error', error)
@@ -150,6 +153,35 @@ export default function RegisterFarmers() {
           'Something went wrong'
       )
     }
+  }
+
+  const handleLivestockRegSuccess = () => {
+    setIsLivestockSuccess(false) // 1️ close modal
+    dispatch(setRegisterNewLivestock(true)) // 2️ switch screen
+  }
+
+  const clearFarmerForm = () => {
+    setFirstName('')
+    setLastName('')
+    setAccommodation(null)
+    setAgeCategory(null)
+    setCity('')
+    setCountry('')
+    setCounty('')
+    setErrors({})
+    setExperience(null)
+    setFarmerKRApin('')
+    setGender('')
+    setPhotoUri('')
+    setIsMemberCooperative('')
+    setMonthlyIncome(null)
+    setAnnualIncome(null)
+    setRCCMNumber('')
+    setNationalId('')
+    setPhone('')
+    setResidentialStatus(null)
+    setSchooling(null)
+    setTenureWithFinancialInstitution(null)
   }
 
   const writeToRecord = (reqData) => {
@@ -228,8 +260,8 @@ export default function RegisterFarmers() {
       let updatedSubmitJsonData = {}
 
       updatedSubmitJsonData = Object.assign({}, apidata, {
-        farmer_identifier: farmerData?.identifier || '',
-        farmer_record_id: farmerData?.record_id || '',
+        farmer_identifier: enrollDbData?.identifier || '',
+        farmer_record_id: recordId,
         agent_id: agent.agent_id || '',
         institution_id: agent.company_id || '',
         livestock_id_number: livestockTag || '',
@@ -551,7 +583,7 @@ export default function RegisterFarmers() {
             // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: humanEnrollAPIResponse }); // Dispatch action to save res object
             // setAPIResponseImgSrc(base64Header + humanEnrollAPIResponse.image);
             setPhotoUri(base64Header + humanEnrollAPIResponse.image)
-            Alert.alert(data.data.message)
+            // Alert.alert(data.data.message)
             setShowApiMessage(data.data.message)
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
@@ -642,7 +674,7 @@ export default function RegisterFarmers() {
       // photoBase64
       Alert.alert('Please take a picture')
       setApiCallInProgress(false)
-      setIsSuccess(false)
+      setIsLivestockSuccess(false)
       // Dispatch action to save res object
     } else {
       let rect = [
@@ -690,7 +722,7 @@ export default function RegisterFarmers() {
               )
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
-              setIsSuccess(false)
+              setIsLivestockSuccess(false)
               // setShowFaceMatchNo(true);
             } else if (livestockVerifyAPIResponse.match === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
@@ -699,11 +731,11 @@ export default function RegisterFarmers() {
               )
               setApiCallInProgress(false)
 
-              setIsSuccess(true)
+              setIsLivestockSuccess(true)
               // setShowFaceMatchOk(true);
             } else {
               setApiCallInProgress(false)
-              setIsSuccess(false)
+              setIsLivestockSuccess(false)
               //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
               // setFaceNotDetected(true);
               Alert.alert('Face not detected, please try again')
@@ -712,7 +744,7 @@ export default function RegisterFarmers() {
           .catch((err) => {
             if (err.response.status === 501 || err.response.status === 404)
               setApiCallInProgress(false)
-            setIsSuccess(false)
+            setIsLivestockSuccess(false)
             // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
             // setFaceNotDetected(true);
           })
@@ -739,7 +771,7 @@ export default function RegisterFarmers() {
 
             callPerformanceMetrics('enroll', livestockEnrollAPIResponse)
             // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: livestockEnrollAPIResponse }); // Dispatch action to save res object
-            setPhotoUri(base64Header + livestockEnrollAPIResponse.image)
+            // setLivestockPhotoUri(base64Header + livestockEnrollAPIResponse.image)
             Alert.alert(data.data.message)
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
@@ -748,11 +780,11 @@ export default function RegisterFarmers() {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
               setFarmerImg(null)
               setApiCallInProgress(false)
-              dispatch(setRegisterNewLivestock(true))
+
               setLivestockPhotoUri(null)
               setLivestockTag('')
               // setSuccessfulAPIcall(true);
-              setIsSuccess(false)
+              setIsLivestockSuccess(false)
               // setShowDuplicateAlert(true);
             } else {
               if (
@@ -762,7 +794,7 @@ export default function RegisterFarmers() {
               ) {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
                 setApiCallInProgress(false)
-                setIsSuccess(false)
+                setIsLivestockSuccess(false)
                 Alert.alert('Face not detected, please try again')
                 // setFaceNotDetected(true);
               } else {
@@ -773,7 +805,7 @@ export default function RegisterFarmers() {
                 setApiCallInProgress(false)
                 // setSuccessfulAPIcall(true);
                 writeToRecordLivestock(livestockEnrollAPIResponse)
-                setIsSuccess(true)
+                setIsLivestockSuccess(true)
                 Alert.alert(data.data.message)
                 setShowApiMessage(data.data.message)
                 // setShowEnrolledMessage(true);
@@ -782,7 +814,7 @@ export default function RegisterFarmers() {
           })
           .catch((err) => {
             if (err.response.status === 501 || err.response.status === 404)
-              setIsSuccess(false)
+              setIsLivestockSuccess(false)
             setApiCallInProgress(false)
             Alert.alert(err.message)
             console.log('There was an error', err)
@@ -799,263 +831,6 @@ export default function RegisterFarmers() {
     setIsSuccess(false)
     setStep(2)
   }
-
-  // Save data to AsyncStorage
-
-  // --- PDF Certificate download (cross-platform) ---
-  // const handleDownload = async () => {
-  //   try {
-  //     // Load the logged-in agent's session data
-  //     const agentSession = await loadSession();
-  //     if (!agentSession) {
-  //       throw new Error("No agent session found. Please log in again.");
-  //     }
-
-  //     const agentId = agentSession.registration_number || agentSession.national_id || "N/A";
-  //     const agentName = agentSession.name || "Unknown Agent";
-  //     const certificateNumber = `CERT-${Date.now()}`;
-
-  //     const cert = {
-  //       firstName,
-  //       lastName,
-  //       gender,
-  //       phone,
-  //       dob: dob?.toLocaleDateString() ?? "",
-  //       country,
-  //       city,
-  //       address,
-  //       nationalId,
-  //       certificateNumber,
-  //       agentId,
-  //       agentName,
-  //     };
-
-  //     console.log("handleDownload: starting PDF generation");
-  //     console.log("handleDownload: Agent ID:", agentId, "Agent Name:", agentName);
-  //     console.log("handleDownload: Certificate Number:", certificateNumber);
-
-  //     // Embed photo from camera base64 if available (most reliable)
-  //     let photoSrc: string | null = null;
-  //     if (photoBase64) {
-  //       photoSrc = `data:image/jpeg;base64,${photoBase64}`;
-  //       console.log("handleDownload: embedding photo from camera base64, size:", photoSrc.length);
-  //     }
-
-  //     // Prepare logo source (try to embed as base64, fallback to uri)
-  //     let logoSrc: string | null = null;
-  //     try {
-  //       const resolved = RNImage.resolveAssetSource(logoAsset);
-  //       const logoUri = resolved?.uri;
-  //       if (logoUri) {
-  //         try {
-  //           const ext = logoUri.split(".").pop()?.split("?")[0]?.toLowerCase();
-  //           const mime = ext === "png" ? "image/png" : "image/jpeg";
-  //           const base64 = await (FileSystem as any).readAsStringAsync(logoUri, { encoding: (FileSystem as any).EncodingType.Base64 });
-  //           logoSrc = `data:${mime};base64,${base64}`;
-  //         } catch (e) {
-  //           console.warn("Could not read bundled logo as base64, using uri instead:", e);
-  //           logoSrc = logoUri;
-  //         }
-  //       }
-  //     } catch (e) {
-  //       console.warn("Error resolving logo asset:", e);
-  //     }
-
-  //     // Quick debug: tell whether we will embed base64 or use a uri (remove after debugging)
-  //     console.log("handleDownload: photoBase64 present:", !!photoBase64, "photoUri:", photoUri);
-  //     if (!photoSrc) {
-  //       console.log("handleDownload: no photoSrc will be embedded in PDF");
-  //     } else if (photoSrc.startsWith("data:")) {
-  //       console.log("handleDownload: embedding photo as data URL, length:", photoSrc.length);
-  //     } else {
-  //       console.log("handleDownload: using photo uri:", photoSrc);
-  //     }
-  //     const html = `
-  //       <!doctype html>
-  //       <html>
-  //         <head>
-  //           <meta charset="utf-8"/>
-  //           <meta name="viewport" content="width=device-width, initial-scale=1" />
-  //           <style>
-  //             * { margin: 0; padding: 0; box-sizing: border-box; }
-  //             @page { size: A4; margin: 0; }
-  //             @media print { body { margin: 0; padding: 0; } }
-  //             body {
-  //               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  //               background: #fff;
-  //               width: 210mm;
-  //               height: 297mm;
-  //               margin: 0;
-  //               padding: 0;
-  //             }
-  //             .card {
-  //               width: 100%;
-  //               height: 100%;
-  //               background: #fff;
-  //               padding: 20mm;
-  //               box-sizing: border-box;
-  //               display: flex;
-  //               flex-direction: column;
-  //             }
-  //             .header { text-align: center; color: #2e7d32; margin-bottom: 15mm; }
-  //             .logo { margin-bottom: 8mm; }
-  //             .logo img { height: 25mm; object-fit: contain; }
-  //             .title { font-size: 24px; font-weight: 700; margin-bottom: 3mm; }
-  //             .subtitle { color: #666; font-size: 13px; margin-bottom: 10mm; }
-  //             .row { display: flex; gap: 15mm; }
-  //             .left { flex-shrink: 1; }
-  //             .photo { width: 50mm; height: 40mm;  object-fit: cover; border: 1px solid #ddd; }
-  //             .right { flex: 1; }
-  //             .info {
-  //               margin-bottom: 5mm;
-  //               color: #222;
-  //               font-size: 12px;
-  //               display: flex;
-  //               gap: 3mm; /* increased by 25% */
-  //               align-items: center;
-  //             }
-  //             .label { color: #333; font-weight: 700; width: 20mm; flex-shrink: 0; } /* labels reduced by 75% */
-  //             .value { color: #000; flex: 1; }
-  //             .footer {
-  //               margin-top: auto;
-  //               padding-top: 10mm;
-  //               text-align: center;
-  //               color: #999;
-  //               font-size: 10px;
-  //               border-top: 1px solid #eee;
-  //             }
-  //           </style>
-  //         </head>
-  //         <body>
-  //           <div class="card">
-  //             <div class="header">
-  //               ${logoSrc ? `<div class="logo"><img src="${logoSrc}" /></div>` : ""}
-  //               <div class="subtitle"><h1 style="font-size: 32px; font-weight: 900; margin: 4mm 0 4mm 0; color: #1b5e20; letter-spacing: 1px;">OWNERSHIP CERTIFICATE</h1></div>
-  //               <div style="margin-top: 8mm; font-size: 10px; color: #666;">Halici Ownership Certificate Number: ${escapeHtml(cert.certificateNumber)}</div>
-  //             </div>
-
-  //             <div class="row">
-  //               <div class="left">
-  //                 ${photoSrc ? `<img src="${photoSrc}" class="photo" />` : `<div style="width:60mm;height:70mm; background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">No Photo</div>`}
-  //               </div>
-
-  //               <div class="right">
-  //                 <div class="info"><span class="label font-bold">Full name:</span> <span class="value">${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)}</span></div>
-
-  //                 <div class="info"><span class="label">Phone:</span> <span class="value">${escapeHtml(cert.phone)}</span></div>
-  //                 <div class="info"><span class="label">Gender:</span> <span class="value">${escapeHtml(cert.gender)}</span></div>
-  //                 <div class="info"><span class="label">DOB:</span> <span class="value">${escapeHtml(cert.dob)}</span></div>
-  //                 <div class="info"><span class="label">Country:</span> <span class="value">${escapeHtml(cert.country)}</span></div>
-  //                 <div class="info"><span class="label">City:</span> <span class="value">${escapeHtml(cert.city)}</span></div>
-  //                 <div class="info"><span class="label">Address:</span> <span class="value">${escapeHtml(cert.address)}</span></div>
-  //                 <div class="info"><span class="label">National ID:</span> <span class="value">${escapeHtml(cert.nationalId)}</span></div>
-  //                 <div class="info" style="margin-top: 8mm; padding-top: 8mm; border-top: 1px solid #ddd;"><span class="label">Agent ID:</span> <span class="value">${escapeHtml(cert.agentId)}</span></div>
-  //                 <div class="info"><span class="label">Agent:</span> <span class="value">${escapeHtml(cert.agentName)}</span></div>
-  //               </div>
-
-  //             </div>
-  //             <div style="margin-top: 15mm; padding: 10mm; font-size: 9px; color: #555; line-height: 1.5; border-top: 1px solid #ddd; margin-left: 20mm; margin-right: 20mm;">
-  //               <p style="margin: 0 0 8mm 0;">
-  //                 On ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}, ${escapeHtml(cert.firstName)} ${escapeHtml(cert.lastName)} expressly consented, via the Halisi platform, to the collection, transfer, and processing of both personal data and registered livestock information, specially for the purposes of credit and insurance applications. Data was collected by agent ${escapeHtml(cert.agentName)}.
-  //               </p>
-  //               <p style="margin: 0 0 8mm 0;">
-  //                 Document generated by Halisi on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}, by agent ${escapeHtml(cert.agentName)}.
-  //               </p>
-  //               <p style="margin: 0;">
-  //                 For more information, please contact info@halisi.ai or visit www.halisi.ai
-  //               </p>
-  //             </div>
-  //             </div>
-
-  //         </body>
-  //       </html>
-  //     `;
-
-  //     const filename = `Farmer_Certificate_${sanitizeFileName(firstName)}_${sanitizeFileName(lastName)}.pdf`;
-
-  //     // Web: use base64 and trigger browser download
-  //     if (Platform.OS === "web") {
-  //       console.log("handleDownload: web platform detected");
-  //       const webFile = await Print.printToFileAsync({ html, base64: true });
-  //       console.log("handleDownload: printToFileAsync returned on web", webFile?.base64 ? "with base64" : "without base64");
-  //       if (webFile.base64) {
-  //         console.log("handleDownload: creating download link");
-  //         const link = document.createElement("a");
-  //         link.href = `data:application/pdf;base64,${webFile.base64}`;
-  //         link.download = filename;
-  //         document.body.appendChild(link);
-  //         link.click();
-  //         link.remove();
-  //         Alert.alert("Success", "Certificate downloaded!");
-  //         return;
-  //       }
-  //       Alert.alert("PDF generated", "PDF created but cannot be saved on this platform.");
-  //       return;
-  //     }
-
-  //     // Native: generate temp file uri
-  //     console.log("handleDownload: native platform detected, calling printToFileAsync");
-  //     let file: any = null;
-  //     try {
-  //       file = await Print.printToFileAsync({ html, base64: false });
-  //       console.log("handleDownload: printToFileAsync succeeded, file uri:", file?.uri);
-  //     } catch (printErr) {
-  //       console.warn("printToFileAsync failed on first attempt:", printErr);
-  //       // Retry without images (some renderers fail when images are too large/corrupt)
-  //       console.log("handleDownload: retrying printToFileAsync without images");
-  //       const strippedHtml = html
-  //         .replace(/<img[^>]*>/g, "")
-  //         .replace(/<div[^>]*class=\"logo-img\"[^>]*>[\s\S]*?<\/div>/g, "");
-  //       try {
-  //         file = await Print.printToFileAsync({ html: strippedHtml, base64: false });
-  //         console.log("handleDownload: retry succeeded, file uri:", file?.uri);
-  //       } catch (secondErr) {
-  //         console.error("printToFileAsync failed again after stripping images:", secondErr);
-  //         throw printErr; // rethrow original to be handled by outer catch
-  //       }
-  //     }
-
-  //     // Validate we got a file URI
-  //     if (!file?.uri) {
-  //       console.error("handleDownload: ERROR - file object exists but uri is missing or falsy");
-  //       throw new Error("PDF generated but no file URI returned");
-  //     }
-
-  //     // Try to share the generated PDF (works on native devices). If sharing unavailable, show temp uri.
-  //     console.log("handleDownload: checking if Sharing is available");
-  //     if (await Sharing.isAvailableAsync()) {
-  //       console.log("handleDownload: Sharing available, calling shareAsync with uri:", file.uri);
-  //       await Sharing.shareAsync(file.uri);
-  //       console.log("handleDownload: shareAsync completed successfully");
-  //     } else {
-  //       console.log("handleDownload: Sharing not available, showing alert");
-  //       Alert.alert("PDF generated", `PDF created. Temp uri: ${file.uri}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("handleDownload: OUTER CATCH - Error generating certificate PDF:", error);
-  //     if (error instanceof Error) {
-  //       console.error("  Error message:", error.message);
-  //       console.error("  Stack:", error.stack);
-  //     }
-  //     Alert.alert("Error", "Failed to generate certificate PDF. See console for details.");
-  //   }
-  // };
-
-  // small helpers for safety
-  // function escapeHtml(input: string | undefined | null) {
-  //   if (!input) return ''
-  //   return input
-  //     .replace(/&/g, '&amp;')
-  //     .replace(/</g, '&lt;')
-  //     .replace(/>/g, '&gt;')
-  //     .replace(/"/g, '&quot;')
-  //     .replace(/'/g, '&#039;')
-  // }
-
-  // function sanitizeFileName(input: string | undefined | null) {
-  //   if (!input) return 'unknown'
-  //   return input.replace(/[^a-z0-9_\-]/gi, '_')
-  // }
 
   if (registerNewLivestock) {
     return <RegisterAnotherLivestockScreen />
@@ -1247,9 +1022,19 @@ export default function RegisterFarmers() {
         )}
       </ScrollView>
       <AppModal visible={isSuccess}>
-        <Text>{showAPiMessage}</Text>
+        <Text
+          style={{ textAlign: 'center' }}
+        >{`Farmer's ${showAPiMessage}`}</Text>
         <TouchableOpacity onPress={handleAction}>
-          <Text>OK</Text>
+          <Text style={{ textAlign: 'center' }}>OK</Text>
+        </TouchableOpacity>
+      </AppModal>
+      <AppModal visible={isLivestockSuccess}>
+        <Text
+          style={{ textAlign: 'center' }}
+        >{`Livestock ${showAPiMessage}`}</Text>
+        <TouchableOpacity onPress={handleLivestockRegSuccess}>
+          <Text style={{ textAlign: 'center' }}>OK</Text>
         </TouchableOpacity>
       </AppModal>
     </View>

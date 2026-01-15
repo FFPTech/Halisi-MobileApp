@@ -364,7 +364,7 @@ export default function StepPersonalInfo({
             <CommonButton title='Register' onPress={handleFarmerSubmit} />
             <AppModal visible={farmerRegistrationModal}>
               <Text>Registration successful. Feel free to proceed.</Text>
-              <CommonButton title='OK' onPress={gotoNextStep} />
+              <Text onPress={gotoNextStep}>ok</Text>
             </AppModal>
           </View>
         </FormStepWrapper>

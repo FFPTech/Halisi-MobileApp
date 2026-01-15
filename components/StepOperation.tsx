@@ -2,15 +2,17 @@ import React from 'react'
 import { Pressable, Text } from 'react-native'
 import { closeOperationScreen } from '../features/farmerSlice'
 import { useAppDispatch } from '../Hooks/hook'
+import { useUser } from '../Hooks/useUserGlobal'
 import FormStepWrapper from './FormStepWrapper'
-
+useUser
 const StepOperation = ({ nextStep }: { nextStep: () => void }) => {
+  const { setStep } = useUser()
   // const {showTagNameInput,setShowTagName,} = useUser()
   // const [showCameraComponent, SetShowCameraComponent] =useState(false)
   const dispatch = useAppDispatch()
   const handleRegisterLivetock = () => {
     dispatch(closeOperationScreen(false))
-    nextStep()
+    setStep(3)
   }
   return (
     <>

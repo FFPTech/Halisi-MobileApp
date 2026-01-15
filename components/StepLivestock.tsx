@@ -42,6 +42,7 @@ const StepLivestock = ({
   handleSubmitLivestock
 }) => {
   const dispatch = useAppDispatch()
+
   const agent = useSelector((state: any) => state.user.agent)
   // const [showCameraComponent, SetShowCameraComponent] = useState(false)
   const {
