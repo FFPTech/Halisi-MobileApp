@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import Checkbox from 'expo-checkbox'
 import { useRouter } from 'expo-router'
 import React from 'react'
@@ -9,8 +10,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { setConsent } from '../features/userSlice'
+import { setConsent, setConsentTimestamp } from '../features/userSlice'
 import { useAppDispatch, useAppSelector } from '../Hooks/hook'
+import { getCurrentTimestamp } from '../utils/utils'
 
 export default function FillForm() {
   const dispatch = useAppDispatch()
@@ -27,10 +29,13 @@ export default function FillForm() {
     if (!agreed) {
       Alert.alert(
         'Consent Required',
-        'You must agree to the Terms and Conditions to continue.'
+        'You must agree to the Terms and Conditions to continue.',
       )
       return
     }
+    const ts = getCurrentTimestamp()
+
+    dispatch(setConsentTimestamp(ts))
 
     router.push('/FarmerForm')
   }

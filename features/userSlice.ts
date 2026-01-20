@@ -42,6 +42,7 @@ interface UserState {
   errorMsg: string | null
   signInModal: boolean
   consent: boolean
+  consentTimestamp?: string
 }
 
 const initialState: UserState = {
@@ -101,7 +102,7 @@ export const signInWithGoogle = createAsyncThunk<
     const companyData = await getCompanyData(
       userDetails.institutions[0],
       userDetails.user_id,
-      userDetails.company_id
+      userDetails.company_id,
     )
 
     return {
@@ -141,7 +142,7 @@ export const signOut = createAsyncThunk<void, void, { rejectValue: string }>(
       console.log('Google logout error:', error)
       return rejectWithValue(error.message || 'Logout failed')
     }
-  }
+  },
 )
 
 const userSlice = createSlice({
@@ -163,6 +164,9 @@ const userSlice = createSlice({
     setConsent(state, action) {
       state.consent = action.payload
     },
+    setConsentTimestamp(state, action: PayloadAction<string>) {
+      state.consentTimestamp = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -176,7 +180,7 @@ const userSlice = createSlice({
         signInWithGoogle.fulfilled,
         (
           state,
-          action: PayloadAction<{ agent: Agent; companyData: CompanyData }>
+          action: PayloadAction<{ agent: Agent; companyData: CompanyData }>,
         ) => {
           state.loading = false
           state.signingIn = false
@@ -185,7 +189,7 @@ const userSlice = createSlice({
           state.successMsg = 'Login successful'
           state.signInModal = true
           // console.log(state.agent)
-        }
+        },
       )
       .addCase(signInWithGoogle.rejected, (state, action) => {
         state.loading = false
@@ -211,6 +215,10 @@ const userSlice = createSlice({
   },
 })
 
-export const { clearUserState, removeSignInModal, setConsent } =
-  userSlice.actions
+export const {
+  clearUserState,
+  removeSignInModal,
+  setConsent,
+  setConsentTimestamp,
+} = userSlice.actions
 export default userSlice.reducer

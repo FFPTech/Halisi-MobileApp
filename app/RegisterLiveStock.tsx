@@ -1,25 +1,27 @@
+import { router } from 'expo-router'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch } from 'react-redux'
-import { setCloseRegisterNewLivestock } from '../features/farmerSlice'
 import { useUser } from '../Hooks/useUserGlobal'
+import { setCloseGotoRegistration } from '../features/farmerSlice'
 
 export const RegisterAnotherLivestockScreen = () => {
   const dispatch = useDispatch()
 
-  const { step, setStep, setShowTagName, setRegisterNewLivestock, setRatings } =
-    useUser()
+  const { step, setStep, setShowTagName, setRatings } = useUser()
   const handleRegisterAnotherLivestock = () => {
-    dispatch(setCloseRegisterNewLivestock(false))
-    setRegisterNewLivestock(false)
     setStep(3)
+    router.replace('/(tabs)/FarmerForm')
+    // dispatch(setCloseRegisterNewLivestock(false))
+    dispatch(setCloseGotoRegistration(false))
+
     console.log('button clicked', step)
 
     setShowTagName(true)
   }
 
   const handleDonotRegisterLivestock = () => {
-    setRegisterNewLivestock(false)
+    // setRegisterNewLivestock(false)
     setRatings(true)
   }
   return (

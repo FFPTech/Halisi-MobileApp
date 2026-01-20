@@ -393,6 +393,7 @@ interface FarmerState {
   recordId: string | null
   operation: 'register' | 'update' | null
   farmerRegistrationModal: boolean
+  registrationTimestamp?: string
 
   /* -------- LIVESTOCK -------- */
   livestockTagNumber: string
@@ -479,7 +480,7 @@ export const verifyNIN = createAsyncThunk<
     try {
       const response = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/iprsverification',
-        requestData
+        requestData,
       )
 
       const res = response.data
@@ -520,7 +521,7 @@ export const verifyNIN = createAsyncThunk<
           mobileTelephoneNumber: res.data.mobileTelephoneNumber,
           identifier: res.data.identifier,
           signature: res.data.signature,
-        })
+        }),
       )
 
       dispatch(queryDB({ farmerNationalNumber, selectedCountry, agent }))
@@ -529,7 +530,7 @@ export const verifyNIN = createAsyncThunk<
       dispatch(setApiCallInProgress(false))
       dispatch(showNoIPRS(true))
     }
-  }
+  },
 )
 
 /* -------------------- QUERY FARMER DB -------------------- */
@@ -560,7 +561,7 @@ export const queryDB = createAsyncThunk<
     try {
       const response = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readfarmernin',
-        data
+        data,
       )
 
       const res = response.data
@@ -572,7 +573,12 @@ export const queryDB = createAsyncThunk<
         dispatch(showValidNINNoAlert(true))
         dispatch(setShowModalIsValid(true))
       } else {
-        dispatch(setEnrollDbData(res))
+        dispatch(
+          setEnrollDbData({
+            identifier: res.identifier,
+            signature: res.signature,
+          }),
+        )
         dispatch(setOperation('update'))
         dispatch(setRecordId(res?.db_data?.[0]?._id))
         dispatch(setIprsStatus(true))
@@ -585,7 +591,7 @@ export const queryDB = createAsyncThunk<
     } finally {
       dispatch(setApiCallInProgress(false))
     }
-  }
+  },
 )
 
 /* -------------------- QUERY LIVESTOCK DB -------------------- */
@@ -618,7 +624,7 @@ export const queryLivestockDB = createAsyncThunk<
     }
     const response = await axios.post(
       'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readlivestocktagid',
-      payload
+      payload,
     )
 
     const res = response?.data
@@ -626,12 +632,12 @@ export const queryLivestockDB = createAsyncThunk<
 
     if (res.identifier === null) {
       dispatch(
-        setLivestockEnrollDbData({ identifier: 'N/A', signature: 'N/A' })
+        setLivestockEnrollDbData({ identifier: 'N/A', signature: 'N/A' }),
       )
       dispatch(
         setLivestockMessage(
-          'This Livestock Tag Identification Number is not currently registered. Please proceed to registration process.'
-        )
+          'This Livestock Tag Identification Number is not currently registered. Please proceed to registration process.',
+        ),
       )
       dispatch(setOperationLivestock('register'))
       // dispatch(setShowGoToRegistration(true))
@@ -694,6 +700,13 @@ const farmerSlice = createSlice({
     setShowGoToVerification(state, action: PayloadAction<boolean>) {
       state.showGoToVerification = action.payload
       state.showGoToRegistration = false
+    },
+
+    setCloseGotoRegistration(state, action: PayloadAction<boolean>) {
+      state.showGoToRegistration = action.payload
+    },
+    setCloseGotoVerification(state, action: PayloadAction<boolean>) {
+      state.showGoToVerification = action.payload
     },
 
     /* ---------- UI ---------- */
@@ -763,6 +776,9 @@ const farmerSlice = createSlice({
     setCloseFarmerRegistrationModal(state, action: PayloadAction<boolean>) {
       state.farmerRegistrationModal = action.payload
     },
+    setRegistrationTimestamp(state, action: PayloadAction<string>) {
+      state.registrationTimestamp = action.payload
+    },
   },
 })
 
@@ -801,6 +817,8 @@ export const {
   setShowLivestockTagModal,
   setCloseFarmerRegistrationModal,
   setShowFarmerRegistrationModal,
+  setCloseGotoRegistration,
+  setRegistrationTimestamp,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

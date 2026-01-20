@@ -15,23 +15,28 @@ import { AppModal } from '../../components/AppModal'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { MultiStepComponent } from '../../components/MultiStep'
 import RatingScreen from '../../components/Ratings'
-import { RegisterAnotherLivestockScreen } from '../../components/RegisterLiveStock'
+// import { RegisterAnotherLivestockScreen } from '../RegisterLiveStock'
+
+import { send } from '@emailjs/react-native'
+import { router } from 'expo-router'
 import StepLivestock from '../../components/StepLivestock'
 import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
 import {
   setRecordId,
   setRecordIdLivestock,
+  setRegistrationTimestamp,
   setShowFarmerRegistrationModal,
 } from '../../features/farmerSlice'
 import { useUser } from '../../Hooks/useUserGlobal'
+import { getCurrentTimestamp } from '../../utils/utils'
 
 // bundled logo asset
 
 export default function RegisterFarmers() {
   const dispatch = useDispatch()
-  const { agent, consent, companyData } = useSelector(
-    (state: any) => state.user
+  const { agent, consent, companyData, consentTimestamp } = useSelector(
+    (state: any) => state.user,
   )
   const {
     farmerData,
@@ -40,6 +45,9 @@ export default function RegisterFarmers() {
     registerNewLivestock,
     setRegisterNewLivestock,
     enrollDbData,
+    setCloseGotoRegistration,
+    registrationTimestamp,
+    livestockRecordId,
   } = useSelector((state: any) => state.farmer)
   console.log(farmerData)
 
@@ -89,7 +97,7 @@ export default function RegisterFarmers() {
   const [farmerKRAPin, setFarmerKRApin] = useState('')
   const [rccm_number, setRCCMNumber] = useState('')
   const [livestockPhotoUri, setLivestockPhotoUri] = useState<string | null>(
-    null
+    null,
   )
   const [livestockTag, setLivestockTag] = useState('')
   const [apiCallInProgress, setApiCallInProgress] = useState(false)
@@ -127,7 +135,7 @@ export default function RegisterFarmers() {
       console.log(data)
       const response = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/updatefarmer',
-        data
+        data,
       )
 
       console.log('Sent awaiting response')
@@ -140,7 +148,9 @@ export default function RegisterFarmers() {
       }
       dispatch(setShowFarmerRegistrationModal(true))
       setLoadingFarmerRegApi(false)
-      clearFarmerForm()
+      const ts = getCurrentTimestamp()
+      dispatch(setRegistrationTimestamp(ts))
+      // clearFarmerForm()
     } catch (error) {
       setLoadingFarmerRegApi(false)
       console.log('There was an error', error)
@@ -150,14 +160,16 @@ export default function RegisterFarmers() {
         'There was an error',
         error?.response?.data?.message ||
           error.message ||
-          'Something went wrong'
+          'Something went wrong',
       )
     }
   }
 
   const handleLivestockRegSuccess = () => {
     setIsLivestockSuccess(false) // 1️ close modal
-    dispatch(setRegisterNewLivestock(true)) // 2️ switch screen
+    // dispatch(setRegisterNewLivestock(true))
+    // dispatch(setCloseGotoRegistration(false)) // 2️ switch screen
+    router.replace('/RegisterLiveStock')
   }
 
   const clearFarmerForm = () => {
@@ -240,7 +252,7 @@ export default function RegisterFarmers() {
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createfarmer',
 
         data,
-        { timeout: 20000 }
+        { timeout: 20000 },
       )
       .then((data) => {
         let res = data.data
@@ -252,6 +264,59 @@ export default function RegisterFarmers() {
           Alert.alert('Error', 'Failed to create farmer record')
         }
       })
+  }
+
+  //Send Email
+
+  const send_email_mfi = async (livestock_record_id) => {
+    let templateParams
+
+    if (operation === 'register') {
+      templateParams = {
+        subject: 'New Farmer & New Livestock Registration',
+        email_body:
+          'We are writing to inform you that a new farmer has been successfully registered on the Halisi platform. Please find below the registration details.',
+        from_name: 'info@neotex.ai',
+        to_email: agent.mic_email_id,
+        financial_institution_name: agent.institution[0],
+        halisi_livestock_registration_id: livestock_record_id,
+        halisi_farmer_registration_id: recordId,
+        registration_date: registrationTimestamp,
+        farmer_name: `${firstName || ''} ${lastName || ''}`,
+        field_officer_name: agent.name || '',
+        consent_timestamp: consentTimestamp,
+      }
+    } else {
+      templateParams = {
+        subject: 'Registered Farmer - Additional Livestock Registration',
+        email_body:
+          'We are writing to inform you that an existing farmer on the Halisi platform has successfully registered additional livestock. Please find the registration details below.',
+        from_name: 'info@neotex.ai',
+        to_email: agent.mic_email_id,
+        financial_institution_name: agent.institution[0],
+        halisi_livestock_registration_id: livestock_record_id,
+        halisi_farmer_registration_id: recordId,
+        registration_date: registrationTimestamp,
+        farmer_name: `${firstName || ''} ${lastName || ''}`,
+        field_officer_name: agent.name || '',
+        consent_timestamp: consentTimestamp,
+      }
+    }
+
+    try {
+      const response = await send(
+        'service_7x1fjqm',
+        'template_1qqxe0v',
+        templateParams,
+        { publicKey: 'iaVah_L30iq6IQXoc' },
+      )
+
+      console.log('Email sent successfully!', response.status, response.text)
+      return response
+    } catch (error) {
+      console.error('Failed to send email. Error:', error)
+      throw error
+    }
   }
 
   // write to DB
@@ -283,7 +348,7 @@ export default function RegisterFarmers() {
       const response = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createlivestock',
         data,
-        { timeout: 20000 } // 20 seconds
+        { timeout: 20000 }, // 20 seconds
       )
 
       const res = response.data
@@ -303,14 +368,6 @@ export default function RegisterFarmers() {
       console.error('Create livestock error:', error)
       throw error
     }
-  }
-
-  if (loadingFarmerRegApi) {
-    return <LoadingSpinner size='large' color='#2e7d32' />
-  }
-
-  if (ratings) {
-    return <RatingScreen />
   }
 
   const handleLivestockSubmit = async () => {
@@ -393,7 +450,7 @@ export default function RegisterFarmers() {
 
       await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/getperformancemetrics',
-        payload
+        payload,
       )
     } catch (err) {
       console.error('Error fetching performance metrics:', err)
@@ -461,14 +518,6 @@ export default function RegisterFarmers() {
     return Object.keys(newErrors).length === 0
   }
 
-  if (loading) {
-    return <LoadingSpinner size='large' color='#2e7d32' />
-  }
-
-  if (apiCallInProgress) {
-    return <LoadingSpinner size='large' color='#2e7d32' />
-  }
-
   const nextStep = () => {
     if (validateStep()) {
       if (step === 2) {
@@ -515,7 +564,7 @@ export default function RegisterFarmers() {
         axios
           .post(
             'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifyfarmer',
-            data
+            data,
           )
           .then((data) => {
             let humanVerifyAPIResponse = data.data
@@ -573,7 +622,7 @@ export default function RegisterFarmers() {
         axios
           .post(
             'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrollfarmer',
-            data
+            data,
           )
           .then((data) => {
             let humanEnrollAPIResponse = data.data
@@ -655,7 +704,7 @@ export default function RegisterFarmers() {
       }
       const resp = await axios.post(
         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/getPerformancemetrics',
-        payload
+        payload,
       )
       console.log(resp)
     } catch (error) {
@@ -700,14 +749,14 @@ export default function RegisterFarmers() {
         axios
           .post(
             'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/verifylivestock',
-            data
+            data,
           )
           .then((data) => {
             let livestockVerifyAPIResponse = data.data
             // calling performance metrics API function
             callPerformanceMetricsForLivestock(
               'verify',
-              livestockVerifyAPIResponse
+              livestockVerifyAPIResponse,
             )
             setApiCallInProgress(false)
             // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
@@ -718,7 +767,7 @@ export default function RegisterFarmers() {
             if (livestockVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
               setLivestockPhotoUri(
-                base64Header + livestockVerifyAPIResponse.image
+                base64Header + livestockVerifyAPIResponse.image,
               )
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
@@ -727,7 +776,7 @@ export default function RegisterFarmers() {
             } else if (livestockVerifyAPIResponse.match === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
               setLivestockPhotoUri(
-                base64Header + livestockVerifyAPIResponse.image
+                base64Header + livestockVerifyAPIResponse.image,
               )
               setApiCallInProgress(false)
 
@@ -763,7 +812,7 @@ export default function RegisterFarmers() {
         axios
           .post(
             'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/enrolllivestock',
-            data
+            data,
           )
           .then((data) => {
             let livestockEnrollAPIResponse = data.data
@@ -778,11 +827,11 @@ export default function RegisterFarmers() {
             // setTotalEnrollTimeFarmer(total);
             if (livestockEnrollAPIResponse.dedup_result === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:null});
-              setFarmerImg(null)
+
               setApiCallInProgress(false)
 
               setLivestockPhotoUri(null)
-              setLivestockTag('')
+              // setLivestockTag('')
               // setSuccessfulAPIcall(true);
               setIsLivestockSuccess(false)
               // setShowDuplicateAlert(true);
@@ -800,13 +849,15 @@ export default function RegisterFarmers() {
               } else {
                 //dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockEnrollAPIResponse.image});
                 setLivestockPhotoUri(
-                  base64Header + livestockEnrollAPIResponse.image
+                  base64Header + livestockEnrollAPIResponse.image,
                 )
                 setApiCallInProgress(false)
                 // setSuccessfulAPIcall(true);
                 writeToRecordLivestock(livestockEnrollAPIResponse)
                 setIsLivestockSuccess(true)
-                Alert.alert(data.data.message)
+                // Alert.alert(data.data.message)
+                send_email_mfi(livestockRecordId)
+                //add description
                 setShowApiMessage(data.data.message)
                 // setShowEnrolledMessage(true);
               }
@@ -830,10 +881,6 @@ export default function RegisterFarmers() {
   const handleAction = () => {
     setIsSuccess(false)
     setStep(2)
-  }
-
-  if (registerNewLivestock) {
-    return <RegisterAnotherLivestockScreen />
   }
 
   // Step content rendering
@@ -936,6 +983,25 @@ export default function RegisterFarmers() {
     }
   }
 
+  if (loadingFarmerRegApi) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
+
+  if (ratings) {
+    return <RatingScreen />
+  }
+  // if (registerNewLivestock) {
+  //   return <RegisterAnotherLivestockScreen />
+  // }
+
+  if (loading) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
+
+  if (apiCallInProgress) {
+    return <LoadingSpinner size='large' color='#2e7d32' />
+  }
+
   return (
     <View style={styles.wrapper}>
       <ScrollView
@@ -993,7 +1059,7 @@ export default function RegisterFarmers() {
                             await handleLivestockSubmit() // submit livestock
                             Alert.alert(
                               'Success',
-                              'Farmer and livestock registration complete!'
+                              'Farmer and livestock registration complete!',
                             )
                             // router.replace("/RegisterLiveStock"); // redirect after submission
                           } catch (e) {
