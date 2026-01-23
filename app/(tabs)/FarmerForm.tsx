@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AppModal } from '../../components/AppModal'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { MultiStepComponent } from '../../components/MultiStep'
-import RatingScreen from '../../components/Ratings'
 // import { RegisterAnotherLivestockScreen } from '../RegisterLiveStock'
 
 import { send } from '@emailjs/react-native'
@@ -23,6 +22,7 @@ import StepLivestock from '../../components/StepLivestock'
 import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
 import {
+  OpenOperationScreen,
   setRecordId,
   setRecordIdLivestock,
   setRegistrationTimestamp,
@@ -42,12 +42,13 @@ export default function RegisterFarmers() {
     farmerData,
     operation,
     recordId,
-    registerNewLivestock,
-    setRegisterNewLivestock,
+
     enrollDbData,
-    setCloseGotoRegistration,
+
     registrationTimestamp,
     livestockRecordId,
+
+    openOperation,
   } = useSelector((state: any) => state.farmer)
   console.log(farmerData)
 
@@ -58,8 +59,6 @@ export default function RegisterFarmers() {
     setStep,
     box,
     loading,
-    ratings,
-    setFarmerImg,
   } = useUser()
 
   const totalSteps = 6
@@ -108,6 +107,7 @@ export default function RegisterFarmers() {
   const [showAPiMessage, setShowApiMessage] = useState('')
   const [loadingFarmerRegApi, setLoadingFarmerRegApi] = useState(false)
   const [isLivestockSuccess, setIsLivestockSuccess] = useState(false)
+  const isEdenbridge = agent.institution?.[0] === 'Edenbridge Capital'
   // const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
   // const [showFarmerRegistered, setShowFarmerRegistered] = useState(false)
 
@@ -271,13 +271,17 @@ export default function RegisterFarmers() {
   const send_email_mfi = async (livestock_record_id) => {
     let templateParams
 
+    const recipientEmails = isEdenbridge
+      ? agent.email // Single agent email for Edenbridge
+      : [agent.company_email_id, agent.mic_email_id].filter(Boolean).join(',')
+
     if (operation === 'register') {
       templateParams = {
         subject: 'New Farmer & New Livestock Registration',
         email_body:
           'We are writing to inform you that a new farmer has been successfully registered on the Halisi platform. Please find below the registration details.',
         from_name: 'info@neotex.ai',
-        to_email: agent.mic_email_id,
+        to_email: recipientEmails,
         financial_institution_name: agent.institution[0],
         halisi_livestock_registration_id: livestock_record_id,
         halisi_farmer_registration_id: recordId,
@@ -521,7 +525,11 @@ export default function RegisterFarmers() {
   const nextStep = () => {
     if (validateStep()) {
       if (step === 2) {
-        setShowOperation(true)
+        // setShowOperation(true)
+        dispatch(OpenOperationScreen(true))
+        if (openOperation) {
+          setStep(step + 1)
+        }
       } else {
         setStep(step + 1)
       }
@@ -820,7 +828,9 @@ export default function RegisterFarmers() {
 
             callPerformanceMetrics('enroll', livestockEnrollAPIResponse)
             // dispatch({ type: 'SET_FARMER_ENROLL_API_RESPONSE', payload: livestockEnrollAPIResponse }); // Dispatch action to save res object
-            // setLivestockPhotoUri(base64Header + livestockEnrollAPIResponse.image)
+            setLivestockPhotoUri(
+              base64Header + livestockEnrollAPIResponse.image,
+            )
             Alert.alert(data.data.message)
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
@@ -987,9 +997,9 @@ export default function RegisterFarmers() {
     return <LoadingSpinner size='large' color='#2e7d32' />
   }
 
-  if (ratings) {
-    return <RatingScreen />
-  }
+  // if (ratings) {
+  //   return <RatingScreen />
+  // }
   // if (registerNewLivestock) {
   //   return <RegisterAnotherLivestockScreen />
   // }
@@ -1008,7 +1018,9 @@ export default function RegisterFarmers() {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header}>Farmer Authentication</Text>
+        <Text style={styles.header}>
+          {step >= 3 ? 'Livestock Authentication' : 'Farmer Authentication'}
+        </Text>
 
         {/* Step Indicator */}
         <MultiStepComponent setStep={setStep} step={step} />

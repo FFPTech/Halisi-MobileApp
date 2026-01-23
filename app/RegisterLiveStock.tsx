@@ -8,21 +8,22 @@ import { setCloseGotoRegistration } from '../features/farmerSlice'
 export const RegisterAnotherLivestockScreen = () => {
   const dispatch = useDispatch()
 
-  const { step, setStep, setShowTagName, setRatings } = useUser()
+  const { step, setStep, setShowTagName } = useUser()
   const handleRegisterAnotherLivestock = () => {
-    setStep(3)
     router.replace('/(tabs)/FarmerForm')
+    setStep(3)
     // dispatch(setCloseRegisterNewLivestock(false))
+    setShowTagName(true)
     dispatch(setCloseGotoRegistration(false))
 
     console.log('button clicked', step)
-
-    setShowTagName(true)
   }
 
   const handleDonotRegisterLivestock = () => {
+    router.replace('/Ratings')
     // setRegisterNewLivestock(false)
-    setRatings(true)
+    // setRatings(true)
+    // dispatch(setRatingsToTrue())
   }
   return (
     <View style={styles.container}>

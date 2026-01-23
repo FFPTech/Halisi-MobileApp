@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import logo from '../assets/images/halisi-logo.png'
 import { signOut } from '../features/userSlice'
 import { useUser } from '../Hooks/useUserGlobal'
-import type { AppDispatch } from '../store'
+import type { AppDispatch } from '../store/store'
 
 export default function Navbar({ title }: { title?: string }) {
   const dispatch = useDispatch<AppDispatch>()

@@ -410,6 +410,7 @@ interface FarmerState {
   apiCallInProgress: boolean
   iprsStatus: boolean
   iprsMessage: string | null
+  ratings: boolean
 
   showcameraComponent: boolean
   showModalNotFound: boolean
@@ -446,7 +447,7 @@ const initialState: FarmerState = {
   apiCallInProgress: false,
   iprsStatus: false,
   iprsMessage: null,
-
+  ratings: false,
   showModalNotFound: false,
   showValidNINNoIPRS: false,
   showValidNINNoAlert: false,
@@ -779,6 +780,12 @@ const farmerSlice = createSlice({
     setRegistrationTimestamp(state, action: PayloadAction<string>) {
       state.registrationTimestamp = action.payload
     },
+    setRatingsToTrue(state) {
+      state.ratings = true
+    },
+    setRatingsToFalse(state) {
+      state.ratings = false
+    },
   },
 })
 
@@ -819,6 +826,8 @@ export const {
   setShowFarmerRegistrationModal,
   setCloseGotoRegistration,
   setRegistrationTimestamp,
+  setRatingsToFalse,
+  setRatingsToTrue,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

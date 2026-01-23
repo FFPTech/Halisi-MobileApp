@@ -1,23 +1,55 @@
 import { Ionicons } from '@expo/vector-icons'
+import axios from 'axios'
 import React, { useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { useAppDispatch } from '../Hooks/hook'
-import { useUser } from '../Hooks/useUserGlobal'
+import { useDispatch, useSelector } from 'react-redux'
 import { signOut } from '../features/userSlice'
+import type { AppDispatch } from '../store/store'
+import { getCurrentTimestamp } from '../utils/utils'
 
 export default function RatingScreen() {
-  const { logout } = useUser()
-  const dispatch = useAppDispatch()
+  const dispatch = useDispatch<AppDispatch>()
+  const { agent } = useSelector((state: any) => state.user)
+  // const { livestockOperation } = useSelector((state: any) => state.farmer)
+
   const [rating, setRating] = useState(0)
-
-  const handleSubmitRating = () => {
-    // safe place to send rating to API / navigate
-    console.log('User rating:', rating)
+  //const [subRating, setSubRating] = useState(0)
+  const timestamp = getCurrentTimestamp()
+  //const ratingSubQuestion = null // No sub-question in this implementation
+  const ratingQuestion =
+    'How easy was it to register a farmer and livestock with Halisi Livestock?'
+  const ratings_Data = {
+    mainRating: rating,
+    subRating: null,
+    institution_id: agent.institutions[0],
+    agent_id: agent.agent_id,
+    timestamp: timestamp,
+    process: 'FO_Registration',
   }
-
+  const onSubmitClick = async () => {
+    try {
+      let data = {
+        record: ratings_Data,
+      }
+      const response = await axios.post(
+        'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/createratings',
+        data,
+      )
+      if (response.data.status === 200) {
+        console.log('Rating submitted successfully')
+        handleSignOut()
+      }
+      handleSignOut()
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  const handleSignOut = () => {
+    dispatch(signOut())
+  }
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Rate Your Experience</Text>
+      <Text style={styles.title}>{ratingQuestion}</Text>
 
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
@@ -37,10 +69,9 @@ export default function RatingScreen() {
           : 'Tap a star to rate'}
       </Text>
 
-      {/* CTA Button */}
       <TouchableOpacity
         style={[styles.button, rating === 0 && styles.buttonDisabled]}
-        onPress={() => dispatch(signOut())}
+        onPress={onSubmitClick}
         disabled={rating === 0}
       >
         <Text style={styles.buttonText}>Thank you</Text>
@@ -58,9 +89,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 20,
     marginBottom: 20,
+    textAlign: 'center',
   },
   starsContainer: {
     flexDirection: 'row',

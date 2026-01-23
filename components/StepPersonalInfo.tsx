@@ -106,7 +106,7 @@ export default function StepPersonalInfo({
   errors,
 }) {
   const { openOperation, farmerRegistrationModal } = useAppSelector(
-    (state) => state.farmer
+    (state) => state.farmer,
   )
 
   const dispatch = useDispatch()
@@ -122,8 +122,8 @@ export default function StepPersonalInfo({
 
   /** ---------- SET DEFAULT CITY & COUNTY ---------- */
   useEffect(() => {
-    if (!city) setCity(activeCities[0])
-    if (!county) setCounty(activeCounties[0])
+    if (!city) setCity()
+    if (!county) setCounty()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCountry])
 
@@ -132,8 +132,8 @@ export default function StepPersonalInfo({
     activeCountry === 'Kenya'
       ? '+254'
       : activeCountry === 'Democratic Republic of Congo'
-      ? '+243'
-      : ''
+        ? '+243'
+        : ''
 
   return (
     <>

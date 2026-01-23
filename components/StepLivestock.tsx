@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import {
   queryLivestockDB,
+  setCloseLivestockModal,
   setShowGoToRegistration,
 } from '../features/farmerSlice'
 import { useAppDispatch } from '../Hooks/hook'
@@ -62,6 +63,11 @@ const StepLivestock = ({
     dispatch(queryLivestockDB({ livestockTagNumber: livestocktag, agent }))
   }
 
+  const handleCloseModal = () => {
+    dispatch(setShowGoToRegistration(true))
+    dispatch(setCloseLivestockModal(false))
+  }
+
   return (
     <>
       {showGoToRegistration ? (
@@ -99,9 +105,7 @@ const StepLivestock = ({
           </View>
           <AppModal visible={livestockTagModal}>
             <Text style={{ textAlign: 'center' }}>{livestockMessage}</Text>
-            <TouchableOpacity
-              onPress={() => dispatch(setShowGoToRegistration(true))}
-            >
+            <TouchableOpacity onPress={handleCloseModal}>
               <Text style={{ textAlign: 'center', marginTop: 10 }}>Ok</Text>
             </TouchableOpacity>
           </AppModal>

@@ -4,7 +4,7 @@ import { closeOperationScreen } from '../features/farmerSlice'
 import { useAppDispatch } from '../Hooks/hook'
 import { useUser } from '../Hooks/useUserGlobal'
 import FormStepWrapper from './FormStepWrapper'
-useUser
+
 const StepOperation = ({ nextStep }: { nextStep: () => void }) => {
   const { setStep } = useUser()
   // const {showTagNameInput,setShowTagName,} = useUser()
@@ -72,7 +72,7 @@ const StepOperation = ({ nextStep }: { nextStep: () => void }) => {
               fontWeight: 'bold',
             }}
           >
-            Loan Livestock
+            Loan Request
           </Text>
         </Pressable>
       </FormStepWrapper>
