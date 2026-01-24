@@ -21,6 +21,7 @@ import { router } from 'expo-router'
 import StepLivestock from '../../components/StepLivestock'
 import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
+import StepUpdateLivestock from '../../components/StepUpdateLivestock'
 import {
   OpenOperationScreen,
   setRecordId,
@@ -831,7 +832,7 @@ export default function RegisterFarmers() {
             setLivestockPhotoUri(
               base64Header + livestockEnrollAPIResponse.image,
             )
-            Alert.alert(data.data.message)
+            // Alert.alert(data.data.message)
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
             // setTotalEnrollTimeFarmer(total);
@@ -990,6 +991,8 @@ export default function RegisterFarmers() {
             handleSubmitLivestock={handleSubmitLivestockBiometrics}
           />
         )
+      case 4:
+        return <StepUpdateLivestock />
     }
   }
 

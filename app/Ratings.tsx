@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import axios from 'axios'
+import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
@@ -26,7 +27,8 @@ export default function RatingScreen() {
     timestamp: timestamp,
     process: 'FO_Registration',
   }
-  const onSubmitClick = async () => {
+  const onSubmitClick = async (star) => {
+    setRating(star)
     try {
       let data = {
         record: ratings_Data,
@@ -37,15 +39,14 @@ export default function RatingScreen() {
       )
       if (response.data.status === 200) {
         console.log('Rating submitted successfully')
-        handleSignOut()
       }
-      handleSignOut()
     } catch (error) {
       console.log(error)
     }
   }
   const handleSignOut = () => {
     dispatch(signOut())
+    router.replace('/')
   }
   return (
     <View style={styles.container}>
@@ -53,7 +54,7 @@ export default function RatingScreen() {
 
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity key={star} onPress={() => setRating(star)}>
+          <TouchableOpacity key={star} onPress={() => onSubmitClick(star)}>
             <Ionicons
               name={star <= rating ? 'star' : 'star-outline'}
               size={40}
@@ -71,7 +72,7 @@ export default function RatingScreen() {
 
       <TouchableOpacity
         style={[styles.button, rating === 0 && styles.buttonDisabled]}
-        onPress={onSubmitClick}
+        onPress={handleSignOut}
         disabled={rating === 0}
       >
         <Text style={styles.buttonText}>Thank you</Text>

@@ -137,6 +137,7 @@ export const signOut = createAsyncThunk<void, void, { rejectValue: string }>(
   async (_, { rejectWithValue }) => {
     try {
       await GoogleSignin.signOut()
+
       // No return value needed, we just clear state
     } catch (error: any) {
       console.log('Google logout error:', error)
