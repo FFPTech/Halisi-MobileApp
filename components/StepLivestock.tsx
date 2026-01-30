@@ -1,5 +1,6 @@
+import { router } from 'expo-router'
 import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { Image, Text, TouchableOpacity, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import {
   queryLivestockDB,
@@ -7,6 +8,7 @@ import {
   setShowGoToRegistration,
 } from '../features/farmerSlice'
 import { useAppDispatch } from '../Hooks/hook'
+import { useUser } from '../Hooks/useUserGlobal'
 import { AppModal } from './AppModal'
 import CommonButton from './CommonButtonComponent'
 import FormStepWrapper from './FormStepWrapper'
@@ -27,6 +29,7 @@ const StepLivestock = ({
   toggleCameraFacing,
   setPhotoBase64,
   handleSubmitLivestock,
+  showVerifyScreen,
 }: {
   livestocktag: string
   setLivestockTag: (val: string) => void
@@ -35,6 +38,7 @@ const StepLivestock = ({
   livestockPhotoUri: string
   facing
   toggleCameraFacing: () => void
+  showVerifyScreen?: boolean
   setPhotoBase64
   setLivestockPhotoUri
   cameraRef
@@ -45,6 +49,8 @@ const StepLivestock = ({
   const dispatch = useAppDispatch()
 
   const agent = useSelector((state: any) => state.user.agent)
+  const { livestockResponse } = useSelector((state: any) => state.farmer)
+  const { setStep } = useUser()
   // const [showCameraComponent, SetShowCameraComponent] = useState(false)
   const {
     showGoToVerification,
@@ -68,6 +74,11 @@ const StepLivestock = ({
     dispatch(setCloseLivestockModal(false))
   }
 
+  const handleSameIdentities = () => {
+    setStep(4)
+    router.replace('/FarmerForm')
+  }
+
   return (
     <>
       {showGoToRegistration ? (
@@ -84,6 +95,35 @@ const StepLivestock = ({
           errors={errors.livestockPhotoUri}
           onpress={handleSubmitLivestock}
         />
+      ) : showVerifyScreen ? (
+        <>
+          <View style={{ flex: 1, marginTop: 20 }}>
+            <Text>Manual Verification</Text>
+            <View style={{ flex: 1, gap: 12 }}>
+              <Image
+                source={{ uri: livestockResponse.original_image }}
+                style={{ width: '100%', height: '100%' }}
+              />
+              <Image
+                source={{ uri: livestockResponse.face_image }}
+                style={{ width: '100%', height: '100%' }}
+              />
+              <View>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#4CAF50', padding: 4 }}
+                >
+                  <Text style={{ color: '#fff' }}>Different identities</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSameIdentities}
+                  style={{ backgroundColor: '#4CAF50', padding: 4 }}
+                >
+                  <Text style={{ color: '#fff' }}>Same identities</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </>
       ) : (
         <FormStepWrapper title={'Livestock Authentication'}>
           <InputField

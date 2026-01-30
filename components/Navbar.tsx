@@ -15,13 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useDispatch, useSelector } from 'react-redux'
 import logo from '../assets/images/halisi-logo.png'
 import { signOut } from '../features/userSlice'
-import { useUser } from '../Hooks/useUserGlobal'
 import type { AppDispatch } from '../store/store'
 
 export default function Navbar({ title }: { title?: string }) {
   const dispatch = useDispatch<AppDispatch>()
-  const { Agent } = useSelector((state: any) => state.user)
-  const { user } = useUser()
+  const { agent } = useSelector((state: any) => state.user)
+
   const router = useRouter()
 
   const [menuVisible, setMenuVisible] = useState(false)
@@ -52,11 +51,10 @@ export default function Navbar({ title }: { title?: string }) {
         <View style={styles.rightItems}>
           <TouchableOpacity style={styles.avatarWrapper}>
             <Image
-              source={user?.image ? { uri: Agent.image } : logo}
+              source={agent?.image ? { uri: agent.image } : logo}
               style={styles.avatar}
             />
           </TouchableOpacity>
-
           <TouchableOpacity onPress={() => setMenuVisible(true)}>
             <MaterialIcons name='menu' size={30} color='#333' />
           </TouchableOpacity>

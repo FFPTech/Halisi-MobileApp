@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native'
 import Svg, { Ellipse, Mask, Polygon, Rect } from 'react-native-svg'
+import { useSelector } from 'react-redux'
 import { useUser } from '../Hooks/useUserGlobal'
 import CommonButton from './CommonButtonComponent'
 import FormStepWrapper from './FormStepWrapper'
@@ -42,6 +43,7 @@ export default function StepCamera({
   const { box, setBox } = useUser()
   const [x0, y0, w0, h0] = box
   const [mode, setMode] = useState<null | 'move' | 'tl' | 'br'>(null)
+  const { agent } = useSelector((state: any) => state.user)
 
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(v, max))
@@ -121,7 +123,7 @@ export default function StepCamera({
           compress: 0.7,
           format: ImageManipulator.SaveFormat.JPEG,
           base64: true,
-        }
+        },
       )
       setPhotoUri(resized.uri)
       setPhotoBase64(resized.base64 ?? null)
@@ -219,7 +221,10 @@ export default function StepCamera({
         </>
       )}
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <CommonButton title='Enroll' onPress={onpress} />
+        <CommonButton
+          title={agent.role === 'field_officer' ? 'enroll' : 'verify'}
+          onPress={onpress}
+        />
       </View>
     </FormStepWrapper>
   )

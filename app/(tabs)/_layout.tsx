@@ -27,7 +27,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name='GetAllUsersScreen'
+          name='GetAllLivestockScreen'
           options={{
             title: 'Users',
             tabBarIcon: ({ color, size }) => (

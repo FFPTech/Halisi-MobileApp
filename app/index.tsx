@@ -29,7 +29,9 @@ export default function index() {
 
   const dispatch = useDispatch<AppDispatch>()
 
-  const { loading, signInModal } = useSelector((state: any) => state.user)
+  const { loading, signInModal, agent } = useSelector(
+    (state: any) => state.user,
+  )
   // const [signInModal, setSignInModal] = React.useState(false)
 
   const router = useRouter()
@@ -41,7 +43,12 @@ export default function index() {
 
   const handleResponseYes = () => {
     dispatch(removeSignInModal())
-    router.replace('/FillForm')
+    if (agent.role === 'veterinarian') {
+      router.replace('/VetLicenseNumberVerification')
+    } else if (agent.role === 'field_officer') {
+      router.replace('/FillForm')
+    }
+    // router.replace('/FillForm')
   }
 
   const handleLoginClick = async () => {

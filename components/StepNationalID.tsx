@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   closeShowModalNotFound,
   closeValidModal,
+  handleShowValidNINOkAlert,
   openShowCameraComponent,
   queryDB,
   verifyNIN,
@@ -68,6 +69,7 @@ export default function StepNationalId({
     showModalNotFound,
     showModalValid,
     showcameraComponent,
+    showValidNINOkAlert,
   } = useSelector((state: any) => state.farmer)
   const agent = useSelector((state: any) => state.user.agent)
   // console.log(agent)
@@ -100,6 +102,11 @@ export default function StepNationalId({
   //     }
   //   };
 
+  const handleCloseModalAlert = () => {
+    dispatch(handleShowValidNINOkAlert(false))
+    dispatch(openShowCameraComponent())
+  }
+
   const handleSubmit = async () => {
     setSubmitted(true)
 
@@ -116,7 +123,7 @@ export default function StepNationalId({
           farmerNationalNumber: nationalId,
           selectedCountry: country,
           agent,
-        })
+        }),
       )
     } else {
       // setLoadingVerifyNiN(true)
@@ -128,7 +135,7 @@ export default function StepNationalId({
           farmerNationalNumber: nationalId,
           selectedCountry: country,
           agent,
-        })
+        }),
       )
 
       // setLoadingVerifyNiN(false)
@@ -193,8 +200,8 @@ export default function StepNationalId({
                   ? nationalId.length === 0
                     ? 'National ID is required'
                     : nationalId.length > 20
-                    ? 'National ID cannot exceed 20 digits'
-                    : undefined
+                      ? 'National ID cannot exceed 20 digits'
+                      : undefined
                   : undefined
               }
               numbersOnly // <-- show error under input
@@ -230,6 +237,21 @@ export default function StepNationalId({
               <Text style={{ textAlign: 'center', marginTop: 10 }}>Ok</Text>
             </TouchableOpacity>
           </AppModal>
+          <AppModal visible={showValidNINOkAlert}>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: 16,
+              }}
+            >
+              This Identification Number is valid and registered. Click OK to
+              proceed with Biometrics verification
+            </Text>
+            <TouchableOpacity onPress={handleCloseModalAlert}>
+              <Text style={{ textAlign: 'center', marginTop: 10 }}>Ok</Text>
+            </TouchableOpacity>
+          </AppModal>
           <View
             style={{
               marginTop: 30,
@@ -238,7 +260,10 @@ export default function StepNationalId({
               alignItems: 'center',
             }}
           >
-            <CommonButton onPress={handleSubmit} title='Submit' />
+            <CommonButton
+              onPress={handleSubmit}
+              title={agent.role === 'field_officer' ? 'submit' : 'verify'}
+            />
           </View>
         </FormStepWrapper>
       ) : (

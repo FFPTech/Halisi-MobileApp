@@ -24,6 +24,7 @@ import StepPersonalInfo from '../../components/StepPersonalInfo'
 import StepUpdateLivestock from '../../components/StepUpdateLivestock'
 import {
   OpenOperationScreen,
+  setLivestockResponse,
   setRecordId,
   setRecordIdLivestock,
   setRegistrationTimestamp,
@@ -48,8 +49,9 @@ export default function RegisterFarmers() {
 
     registrationTimestamp,
     livestockRecordId,
-
+    enrollLivestockDbData,
     openOperation,
+    livestockOperation,
   } = useSelector((state: any) => state.farmer)
   console.log(farmerData)
 
@@ -69,6 +71,7 @@ export default function RegisterFarmers() {
   const cameraRef = useRef<any>(null)
   const [photoUri, setPhotoUri] = useState<string | null>(null)
   const [photoBase64, setPhotoBase64] = useState<string | null>(null)
+  const [verifyScreen, setVerifyScreen] = useState(false)
 
   // Form data states
   const [firstName, setFirstName] = useState('')
@@ -108,6 +111,8 @@ export default function RegisterFarmers() {
   const [showAPiMessage, setShowApiMessage] = useState('')
   const [loadingFarmerRegApi, setLoadingFarmerRegApi] = useState(false)
   const [isLivestockSuccess, setIsLivestockSuccess] = useState(false)
+  const [showFaceMatch, setShowFaceMatch] = useState(false)
+  const [showFaceMatchNo, setShowFaceMatchNo] = useState(false)
   const isEdenbridge = agent.institution?.[0] === 'Edenbridge Capital'
   // const [registerNewLivestock, setRegisterNewLivestock] = useState(false)
   // const [showFarmerRegistered, setShowFarmerRegistered] = useState(false)
@@ -561,10 +566,10 @@ export default function RegisterFarmers() {
         let t0 = performance.now()
         let data = {
           agent_id: agent.agent_id,
-          institution_id: agent.institution_id,
+          institution_id: agent.company_id || '',
           image: photoBase64,
-          signature: farmerData.signature,
-          id: farmerData.id,
+          signature: enrollDbData.signature,
+          id: enrollDbData.identifier,
           rect: rect,
           moveable_rect: rect,
         }
@@ -588,19 +593,20 @@ export default function RegisterFarmers() {
             // setTotalEnrollTimeFarmer(total);
             if (humanVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
-              // setPhotoUri(base64Header + humanVerifyAPIResponse.image)
+              setPhotoUri(base64Header + humanVerifyAPIResponse.image)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
-              setIsSuccess(false)
+              // setIsSuccess(false)
               Alert.alert('Verification Failed', 'Face does not match')
-              // setShowFaceMatchNo(true);
+              setShowFaceMatchNo(true)
             } else if (humanVerifyAPIResponse.match === true) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + humanVerifyAPIResponse.image});
               setPhotoUri(base64Header + humanVerifyAPIResponse.image)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
-              setIsSuccess(true)
-              // setShowFaceMatchOk(true);
+              // setIsSuccess(true)
+              setShowApiMessage(data.data.message)
+              setShowFaceMatch(true)
             } else {
               setApiCallInProgress(false)
               setIsSuccess(false)
@@ -742,18 +748,17 @@ export default function RegisterFarmers() {
         parseInt(box[3]),
       ]
 
-      if (operation !== 'register') {
+      if (livestockOperation !== 'register') {
         let t0 = performance.now()
         let data = {
           agent_id: agent.agent_id,
-          institution_id: agent.company_id,
+          institution_id: agent.company_id || '',
           image: photoBase64,
-          signature: farmerData.signature,
-          id: farmerData.identifier,
+          signature: enrollLivestockDbData.signature,
+          id: enrollLivestockDbData.identifier,
           rect: rect,
           moveable_rect: rect,
         }
-        console.log('plese let me see', data)
 
         axios
           .post(
@@ -770,9 +775,11 @@ export default function RegisterFarmers() {
             setApiCallInProgress(false)
             // setAPIResponseImgSrc(base64Header + humanVerifyAPIResponse.image);
             // dispatch({ type: 'SET_FARMER_VERIFY_API_RESPONSE', payload: humanVerifyAPIResponse }); // Dispatch action to save res object
+            dispatch(setLivestockResponse(livestockVerifyAPIResponse))
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
             // setTotalEnrollTimeFarmer(total);
+            // setVerifyScreen(true)
             if (livestockVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
               setLivestockPhotoUri(
@@ -788,7 +795,7 @@ export default function RegisterFarmers() {
                 base64Header + livestockVerifyAPIResponse.image,
               )
               setApiCallInProgress(false)
-
+              setVerifyScreen(true)
               setIsLivestockSuccess(true)
               // setShowFaceMatchOk(true);
             } else {
@@ -894,6 +901,12 @@ export default function RegisterFarmers() {
     setStep(2)
   }
 
+  const handleVerification = () => {
+    setShowFaceMatch(false)
+    setStep(2)
+    dispatch(OpenOperationScreen(true))
+  }
+
   // Step content rendering
   const renderStepContent = () => {
     if (!permission) return <View />
@@ -989,6 +1002,7 @@ export default function RegisterFarmers() {
             toggleCameraFacing={toggleCameraFacing}
             setPhotoBase64={setPhotoBase64}
             handleSubmitLivestock={handleSubmitLivestockBiometrics}
+            showVerifyScreen={verifyScreen}
           />
         )
       case 4:
@@ -1115,6 +1129,14 @@ export default function RegisterFarmers() {
           style={{ textAlign: 'center' }}
         >{`Livestock ${showAPiMessage}`}</Text>
         <TouchableOpacity onPress={handleLivestockRegSuccess}>
+          <Text style={{ textAlign: 'center' }}>OK</Text>
+        </TouchableOpacity>
+      </AppModal>
+      <AppModal visible={showFaceMatch}>
+        <Text
+          style={{ textAlign: 'center' }}
+        >{`Farmer ${showAPiMessage}`}</Text>
+        <TouchableOpacity onPress={handleVerification}>
           <Text style={{ textAlign: 'center' }}>OK</Text>
         </TouchableOpacity>
       </AppModal>

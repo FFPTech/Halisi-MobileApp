@@ -83,53 +83,93 @@ export const signInWithGoogle = createAsyncThunk<
 >('user/signInWithGoogle', async (_, { rejectWithValue }) => {
   try {
     await GoogleSignin.hasPlayServices()
+
     const result = await GoogleSignin.signIn()
-    const profile = result.data.user || result.data?.user
-    if (!profile) throw new Error('Google profile not found')
+    console.log('Googldata', result)
+
+    // ✅ Correct Google user extraction (safe)
+    const profile = result?.data.user ?? result?.data?.user
+    if (!profile) {
+      return rejectWithValue('Google profile not found')
+    }
 
     const userData = {
-      email: profile.email,
-      name: profile.name,
-      google_id: profile.id,
+      email: profile.email ?? '',
+      name: profile.name ?? '',
+      google_id: profile.id ?? '',
       image: profile.photo ?? '',
     }
 
+    // 🔐 Backend login
     const userDetails = await handleLoginAPI(userData.email)
-    if (!userDetails.status) {
+    console.log('userdetails', userDetails)
+
+    if (!userDetails || !userDetails.status) {
       return rejectWithValue('Your account is not approved.')
     }
 
+    const isVeterinarian = userDetails.role === 'veterinarian'
+
+    // 🩺 VETERINARIAN FIX (no company / institutions)
+    if (isVeterinarian) {
+      return {
+        agent: {
+          company_id: '',
+          institutions: [],
+          mic_email_id: '',
+          name: userDetails.name ?? '',
+          national_id: userDetails.national_id ?? '',
+          mic_name: userDetails.mic_name ?? '',
+          registration_number: userDetails.registration_number ?? '',
+          role: userDetails.role ?? '',
+          status: userDetails.status ?? false,
+          agent_id: userDetails.user_id ?? '',
+          image: userData.image ?? '',
+        },
+        companyData: {
+          email: '',
+          company_logo: '',
+          compamy_email_id: '',
+          linked_insurance_companies: [],
+        },
+      }
+    }
+
+    // 🏢 NON-VETERINARIAN USERS (normal flow)
     const companyData = await getCompanyData(
-      userDetails.institutions[0],
-      userDetails.user_id,
-      userDetails.company_id,
+      userDetails?.institutions?.[0] ?? '',
+      userDetails?.user_id ?? '',
+      userDetails?.company_id ?? '',
     )
 
     return {
       agent: {
-        company_id: userDetails.company_id,
-        institutions: userDetails.institutions,
-        mic_email_id: userDetails.mic_email_id,
-        name: userDetails.name,
-        national_id: userDetails.national_id,
-        mic_name: userDetails.mic_name,
-        registration_number: userDetails.registration_number,
-        role: userDetails.role,
-        status: userDetails.status,
-        agent_id: userDetails.user_id,
-        image: userData.image,
+        company_id: userDetails.company_id ?? '',
+        institutions: userDetails.institutions ?? [],
+        mic_email_id: userDetails.mic_email_id ?? '',
+        name: userDetails.name ?? '',
+        national_id: userDetails.national_id ?? '',
+        mic_name: userDetails.mic_name ?? '',
+        registration_number: userDetails.registration_number ?? '',
+        role: userDetails.role ?? '',
+        status: userDetails.status ?? false,
+        agent_id: userDetails.user_id ?? '',
+        image: userData.image ?? '',
       },
       companyData: {
-        email: companyData.email,
-        company_logo: companyData.company_logo,
-        compamy_email_id: companyData.compamy_email_id,
-        linked_insurance_companies: companyData.linked_insurance_companies,
+        email: companyData?.email ?? '',
+        company_logo: companyData?.company_logo ?? '',
+        compamy_email_id: companyData?.compamy_email_id ?? '',
+        linked_insurance_companies:
+          companyData?.linked_insurance_companies ?? [],
       },
     }
   } catch (error: any) {
     return rejectWithValue(error.message || 'Google login failed')
   }
 })
+
+// {"company_id": null, "institutions": null, "mic_email_id": null, "mic_name": null, "name": "Divine KALU Veterinarian", "national_id": "19191919", "registration_number": "80080080", "role": "veterinarian", "status": true, "user_id": "690889870148f53ea3b61007"}
 
 //Sign-Out
 export const signOut = createAsyncThunk<void, void, { rejectValue: string }>(

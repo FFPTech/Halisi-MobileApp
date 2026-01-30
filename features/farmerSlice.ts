@@ -1,367 +1,3 @@
-// import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
-// import axios from 'axios'
-// import { RootState } from '../store/store'
-// import { getCountryCode } from '../utils/utils'
-
-// /* -------------------- TYPES -------------------- */
-
-// export interface FarmerIPRSData {
-//   firstName?: string
-//   middleName?: string
-//   lastName?: string
-//   country?: string
-//   dateOfBirth?: string
-//   gender?: string
-//   idNumber?: string
-//   idType?: string
-//   mainAddress?: string
-//   mobileTelephoneNumber?: string
-//   identifier?: string
-//   signature?: string
-// }
-
-// interface FarmerState {
-//   farmerNationalNumber: string
-//   farmerData: FarmerIPRSData | null
-//   enrollDbData: any | null
-//   recordId: string | null
-//   operation: 'register' | 'update' | null
-
-//   apiCallInProgress: boolean
-//   iprsStatus: boolean
-//   iprsMessage: string | null
-
-//   showcameraComponent: boolean
-//   showModalNotFound: boolean
-//   showValidNINNoIPRS: boolean
-//   showValidNINNoAlert: boolean
-//   showValidNINOkAlert: boolean
-//   showModalValid: boolean
-//   openOperation: boolean
-//   error: boolean
-// }
-
-// /* -------------------- INITIAL STATE -------------------- */
-
-// const initialState: FarmerState = {
-//   farmerNationalNumber: '',
-//   farmerData: null,
-//   enrollDbData: null,
-//   recordId: null,
-//   operation: null,
-
-//   apiCallInProgress: false,
-//   iprsStatus: false,
-//   iprsMessage: null,
-
-//   showModalNotFound: false,
-//   showValidNINNoIPRS: false,
-//   showValidNINNoAlert: false,
-//   showValidNINOkAlert: false,
-//   showModalValid: false,
-//   showcameraComponent: false,
-//   error: false,
-//   openOperation: false,
-// }
-
-// /* -------------------- VERIFY NIN -------------------- */
-
-// export const verifyNIN = createAsyncThunk<
-//   void,
-//   { farmerNationalNumber: string; selectedCountry: string },
-//   { state: RootState }
-// >(
-//   'farmer/verifyNIN',
-//   async ({ farmerNationalNumber, selectedCountry }, { dispatch }) => {
-//     dispatch(setFarmerNationalNumber(farmerNationalNumber))
-//     dispatch(setApiCallInProgress(true))
-
-//     const requestData = {
-//       id_number: farmerNationalNumber,
-//       id_type: 'national-id',
-//       language: 'EN',
-//       country: selectedCountry,
-//       env: 'Qua',
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/iprsverification',
-//         requestData
-//       )
-
-//       const res = response.data
-//       const message = res?.message?.toLowerCase() || ''
-//       const statusFound = res?.data?.status?.toLowerCase() === 'found'
-
-//       if (
-//         message.includes('not currently registered') ||
-//         message.includes('not valid')
-//       ) {
-//         dispatch(setIPRSMessage(res.message))
-//         dispatch(setApiCallInProgress(false))
-//         dispatch(showNoIPRS(true))
-//         dispatch(showModalNotFound(true))
-//         return
-//       }
-
-//       if (!statusFound) {
-//         dispatch(setApiCallInProgress(false))
-//         dispatch(showModalNotFound(true))
-//         return
-//       }
-
-//       /* ---------- FOUND ---------- */
-//       dispatch(setIprsStatus(true))
-
-//       dispatch(
-//         setFarmerData({
-//           firstName: res.data.firstName,
-//           middleName: res.data.middleName,
-//           lastName: res.data.lastName,
-//           country: res.data.country,
-//           dateOfBirth: res.data.dateOfBirth,
-//           gender: res.data.gender,
-//           idNumber: res.data.idNumber,
-//           idType: res.data.identityType,
-//           mainAddress: res.data.mainAddress,
-//           mobileTelephoneNumber: res.data.mobileTelephoneNumber,
-//           identifier: res.data.identifier,
-//           signature: res.data.signature,
-//         })
-//       )
-
-//       dispatch(queryDB({ farmerNationalNumber, selectedCountry }))
-//     } catch (error: any) {
-//       console.log('IPRS ERROR:', error?.response?.data || error.message)
-//       dispatch(setApiCallInProgress(false))
-//       dispatch(showNoIPRS(true))
-//     }
-//   }
-// )
-
-// /* -------------------- QUERY DB -------------------- */
-
-// export const queryDB = createAsyncThunk<
-//   void,
-//   { farmerNationalNumber: string; selectedCountry: string },
-//   { state: RootState }
-// >(
-//   'farmer/queryDB',
-//   async ({ farmerNationalNumber, selectedCountry }, { dispatch, getState }) => {
-//     const agent = getState().user.agent
-
-//     if (!agent) {
-//       dispatch(setApiCallInProgress(false))
-//       dispatch(showValidNINNoAlert(true))
-//       return
-//     }
-
-//     const data = {
-//       farmer_national_id: farmerNationalNumber,
-//       agent_id: agent.agent_id,
-//       institution_id: agent.company_id,
-//       country: getCountryCode(selectedCountry),
-//       env: 'Qua',
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readfarmernin',
-//         data
-//       )
-
-//       const res = response.data
-//       console.log(res)
-
-//       if (res.identifier === null) {
-//         dispatch(
-//           setEnrollDbData({
-//             identifier: 'N/A',
-//             signature: 'N/A',
-//           })
-//         )
-//         dispatch(setOperation('register'))
-//         dispatch(setIprsStatus(true))
-//         dispatch(showValidNINNoAlert(true))
-//         dispatch(setShowModalIsValid(true))
-//       } else {
-//         dispatch(setEnrollDbData(res))
-//         dispatch(setOperation('update'))
-//         dispatch(setRecordId(res.db_data[0]._id))
-//         dispatch(setIprsStatus(true))
-//         dispatch(showValidNINOkAlert(true))
-//       }
-//     } catch (error) {
-//       console.log(error)
-//       dispatch(setOperation('register'))
-//       dispatch(showValidNINNoAlert(true))
-//     } finally {
-//       dispatch(setApiCallInProgress(false))
-//     }
-//   }
-// )
-
-// export const queryLivestockDB = createAsyncThunk<
-//   void,
-//   { livestockTagNumber: string },
-//   { state: RootState }
-// >(
-//   'livestock/queryDB',
-//   async ({ livestockTagNumber }, { dispatch, getState }) => {
-//     dispatch(setApiCallInProgress(true))
-
-//     const agent = getState().user.agent
-
-//     if (!agent) {
-//       dispatch(setApiCallInProgress(false))
-//       dispatch(setOperationLivestock('register'))
-//       dispatch(setShowGoToRegistration(true))
-//       return
-//     }
-
-//     dispatch(setLivestockTagNumber(livestockTagNumber))
-
-//     const payload = {
-//       livestock_id_number: livestockTagNumber,
-//       agent_id: agent.agent_id,
-//       institution_id: agent.company_id,
-//       env: 'Qua',
-//     }
-
-//     try {
-//       const response = await axios.post(
-//         'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readlivestocktagid',
-//         payload
-//       )
-
-//       const res = response?.data
-//       console.log('Livestock DB response:', res)
-
-//       const identifier = res?.identifier
-
-//       // 👉 Livestock NOT found → Register
-//       if (!identifier) {
-//         dispatch(
-//           setLivestockEnrollDbData({
-//             identifier: 'N/A',
-//             signature: 'N/A',
-//           })
-//         )
-//         dispatch(setOperationLivestock('register'))
-//         dispatch(setShowGoToRegistration(true))
-//         return
-//       }
-
-//       // 👉 Livestock EXISTS → Verify / Update
-//       dispatch(setLivestockEnrollDbData(res))
-//       dispatch(setOperationLivestock('update'))
-//       dispatch(setShowGoToVerification(true))
-//     } catch (error: any) {
-//       console.error('Livestock DB error:', error)
-
-//       const status = error?.response?.status
-
-//       if (status === 404 || status === 501) {
-//         dispatch(setOperationLivestock('register'))
-//         dispatch(setShowGoToRegistration(true))
-//       }
-//     } finally {
-//       dispatch(setApiCallInProgress(false))
-//     }
-//   }
-// )
-
-// /* -------------------- SLICE -------------------- */
-
-// const farmerSlice = createSlice({
-//   name: 'farmer',
-//   initialState,
-//   reducers: {
-//     setFarmerNationalNumber(state, action: PayloadAction<string>) {
-//       state.farmerNationalNumber = action.payload
-//     },
-//     setFarmerData(state, action: PayloadAction<FarmerIPRSData>) {
-//       state.farmerData = action.payload
-//     },
-//     setEnrollDbData(state, action: PayloadAction<any>) {
-//       state.enrollDbData = action.payload
-//     },
-//     setRecordId(state, action: PayloadAction<string>) {
-//       state.recordId = action.payload
-//     },
-//     setOperation(state, action: PayloadAction<'register' | 'update'>) {
-//       state.operation = action.payload
-//     },
-//     setApiCallInProgress(state, action: PayloadAction<boolean>) {
-//       state.apiCallInProgress = action.payload
-//     },
-//     setIprsStatus(state, action: PayloadAction<boolean>) {
-//       state.iprsStatus = action.payload
-//     },
-//     setIPRSMessage(state, action: PayloadAction<string>) {
-//       state.iprsMessage = action.payload
-//     },
-//     showNoIPRS(state, action: PayloadAction<boolean>) {
-//       state.showValidNINNoIPRS = action.payload
-//     },
-//     showValidNINNoAlert(state, action: PayloadAction<boolean>) {
-//       state.showValidNINNoAlert = action.payload
-//     },
-//     showValidNINOkAlert(state, action: PayloadAction<boolean>) {
-//       state.showValidNINOkAlert = action.payload
-//     },
-//     showModalNotFound(state, action: PayloadAction<boolean>) {
-//       state.showModalNotFound = action.payload
-//     },
-//     closeShowModalNotFound(state) {
-//       state.showModalNotFound = false
-//     },
-//     setShowModalIsValid(state, action: PayloadAction<boolean>) {
-//       state.showModalValid = action.payload
-//     },
-//     openShowCameraComponent(state) {
-//       state.showcameraComponent = true
-//     },
-//     closeShowCameraComponent(state) {
-//       state.showcameraComponent = false
-//     },
-//     closeValidModal(state) {
-//       state.showModalValid = false
-//     },
-//     OpenOperationScreen(state, action: PayloadAction<boolean>) {
-//       state.openOperation = action.payload
-//     },
-//     closeOperationScreen(state, action: PayloadAction<boolean>) {
-//       state.openOperation = action.payload
-//     },
-//   },
-// })
-
-// export const {
-//   setFarmerNationalNumber,
-//   setFarmerData,
-//   setEnrollDbData,
-//   setRecordId,
-//   setOperation,
-//   setApiCallInProgress,
-//   setIprsStatus,
-//   setIPRSMessage,
-//   showNoIPRS,
-//   showValidNINNoAlert,
-//   showValidNINOkAlert,
-//   showModalNotFound,
-//   setShowModalIsValid,
-//   closeValidModal,
-//   closeShowModalNotFound,
-//   openShowCameraComponent,
-//   closeShowCameraComponent,
-//   OpenOperationScreen,
-//   closeOperationScreen,
-// } = farmerSlice.actions
-
-// export default farmerSlice.reducer
-
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { Alert } from 'react-native'
@@ -405,6 +41,8 @@ interface FarmerState {
   registerNewLivestock: boolean
   livestockMessage: string
   livestockTagModal: boolean
+  livestockResponseData: any
+  enrollLivestockDbData: any
 
   /* -------- UI -------- */
   apiCallInProgress: boolean
@@ -443,6 +81,8 @@ const initialState: FarmerState = {
   livestockMessage: '',
   registerNewLivestock: false,
   livestockTagModal: false,
+  livestockResponseData: {},
+  enrollLivestockDbData: null,
   /* -------- UI -------- */
   apiCallInProgress: false,
   iprsStatus: false,
@@ -566,6 +206,7 @@ export const queryDB = createAsyncThunk<
       )
 
       const res = response.data
+      console.log(res)
 
       if (res?.identifier === null) {
         dispatch(setEnrollDbData({ identifier: 'N/A', signature: 'N/A' }))
@@ -573,6 +214,12 @@ export const queryDB = createAsyncThunk<
         dispatch(setIprsStatus(true))
         dispatch(showValidNINNoAlert(true))
         dispatch(setShowModalIsValid(true))
+
+        if (agent.role === 'field_officer') {
+          dispatch(showValidNINNoAlert(true))
+        } else {
+          dispatch(setIprsStatus(true))
+        }
       } else {
         dispatch(
           setEnrollDbData({
@@ -582,19 +229,19 @@ export const queryDB = createAsyncThunk<
         )
         dispatch(setOperation('update'))
         dispatch(setRecordId(res?.db_data?.[0]?._id))
+        console.log(res?.db_data?.[0]?._id)
+
         dispatch(setIprsStatus(true))
-        dispatch(showValidNINOkAlert(true))
+        dispatch(handleShowValidNINOkAlert(true))
       }
     } catch (error) {
-      dispatch(setOperation('register'))
-      dispatch(showValidNINNoAlert(true))
       console.log(error)
     } finally {
       dispatch(setApiCallInProgress(false))
     }
   },
 )
-
+//"livestock_id_number": "700700700", "livestock_record_id": "697a0a4528ffd14c582cd472",
 /* -------------------- QUERY LIVESTOCK DB -------------------- */
 
 export const queryLivestockDB = createAsyncThunk<
@@ -644,10 +291,18 @@ export const queryLivestockDB = createAsyncThunk<
       // dispatch(setShowGoToRegistration(true))
       dispatch(setShowLivestockTagModal(true))
       return
+    } else {
+      dispatch(
+        setLivestockEnrollDbDataBase({
+          identifier: res.identifier,
+          signature: res.signature,
+        }),
+      )
     }
 
     dispatch(setShowLivestockTagModal(true))
     dispatch(setLivestockEnrollDbData(res))
+
     dispatch(setOperationLivestock('update'))
     dispatch(setShowGoToVerification(true))
   } catch (error: any) {
@@ -726,7 +381,10 @@ const farmerSlice = createSlice({
     showValidNINNoAlert(state, action: PayloadAction<boolean>) {
       state.showValidNINNoAlert = action.payload
     },
-    showValidNINOkAlert(state, action: PayloadAction<boolean>) {
+    handleShowValidNINOkAlertLivestock(state, action: PayloadAction<boolean>) {
+      state.showValidNINOkAlert = action.payload
+    },
+    handleShowValidNINOkAlert(state, action: PayloadAction<boolean>) {
       state.showValidNINOkAlert = action.payload
     },
     showModalNotFound(state, action: PayloadAction<boolean>) {
@@ -786,6 +444,12 @@ const farmerSlice = createSlice({
     setRatingsToFalse(state) {
       state.ratings = false
     },
+    setLivestockResponse(state, action: PayloadAction<any>) {
+      state.livestockResponseData = action.payload
+    },
+    setLivestockEnrollDbDataBase(state, action: PayloadAction<any>) {
+      state.enrollLivestockDbData = action.payload
+    },
   },
 })
 
@@ -795,7 +459,7 @@ export const {
   setEnrollDbData,
   setRecordId,
   setOperation,
-
+  setLivestockEnrollDbDataBase,
   setLivestockTagNumber,
   setLivestockEnrollDbData,
   setOperationLivestock,
@@ -807,7 +471,7 @@ export const {
   setIPRSMessage,
   showNoIPRS,
   showValidNINNoAlert,
-  showValidNINOkAlert,
+  handleShowValidNINOkAlert,
   showModalNotFound,
   setShowModalIsValid,
   closeValidModal,
@@ -828,6 +492,7 @@ export const {
   setRegistrationTimestamp,
   setRatingsToFalse,
   setRatingsToTrue,
+  setLivestockResponse,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

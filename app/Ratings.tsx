@@ -18,7 +18,10 @@ export default function RatingScreen() {
   const timestamp = getCurrentTimestamp()
   //const ratingSubQuestion = null // No sub-question in this implementation
   const ratingQuestion =
-    'How easy was it to register a farmer and livestock with Halisi Livestock?'
+    agent.role === 'field_officer'
+      ? 'How easy was it to register a farmer and livestock with Halisi Livestock?'
+      : 'How satisfied are you with the livestock validation and verification reporting?'
+
   const ratings_Data = {
     mainRating: rating,
     subRating: null,
