@@ -44,6 +44,7 @@ export default function StepCamera({
   const [x0, y0, w0, h0] = box
   const [mode, setMode] = useState<null | 'move' | 'tl' | 'br'>(null)
   const { agent } = useSelector((state: any) => state.user)
+  const [hideBoundingBox, setHideBoundingBox] = useState(false)
 
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(v, max))
@@ -183,7 +184,7 @@ export default function StepCamera({
             <Image source={{ uri: photoUri }} style={styles.photoPreview} />
 
             {/* ✅ Bounding box ONLY for livestock */}
-            {species !== 'farmer' && (
+            {species !== 'farmer' && !hideBoundingBox && (
               <View
                 {...panResponder.panHandlers}
                 style={[
@@ -223,7 +224,10 @@ export default function StepCamera({
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <CommonButton
           title={agent.role === 'field_officer' ? 'enroll' : 'verify'}
-          onPress={onpress}
+          onPress={async () => {
+            setHideBoundingBox(true) //  remove green box immediately
+            await onpress() //  send image to backend
+          }}
         />
       </View>
     </FormStepWrapper>

@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import CommonButton from '../../components/CommonButtonComponent'
 import {
   queryLivestockDB,
+  setOperationLivestock,
   setShowGoToRegistration,
 } from '../../features/farmerSlice'
 import { useUser } from '../../Hooks/useUserGlobal'
@@ -21,7 +22,9 @@ import type { AppDispatch } from '../../store/store'
 
 export default function LivestockCardList() {
   const { agent } = useSelector((state: any) => state.user)
-  const { recordId } = useSelector((state: any) => state.farmer)
+  const { recordId, enrollLivestockDbData } = useSelector(
+    (state: any) => state.farmer,
+  )
   const dispatch = useDispatch<AppDispatch>()
   const { setStep } = useUser()
 
@@ -61,6 +64,7 @@ export default function LivestockCardList() {
   const handleSelect = (id: string) => {
     setSelectedId((prev) => (prev === id ? null : id))
   }
+  console.log(enrollLivestockDbData)
 
   // dispatch(queryLivestockDB({ livestockTagNumber: livestocktag, agent }))
 
@@ -78,7 +82,13 @@ export default function LivestockCardList() {
     router.replace('/(tabs)/FarmerForm')
     setStep(3)
     dispatch(setShowGoToRegistration(true))
-    dispatch(queryLivestockDB({ livestockTagNumber: selectedId, agent }))
+    console.log(
+      dispatch(queryLivestockDB({ livestockTagNumber: selectedId, agent })),
+    )
+
+    console.log('DB Data', enrollLivestockDbData)
+
+    dispatch(setOperationLivestock('update'))
   }
 
   return (
@@ -99,10 +109,10 @@ export default function LivestockCardList() {
           </Text>
         }
         renderItem={({ item }) => {
-          const isSelected = item.livestock_record_id === selectedId
+          const isSelected = item.livestock_id_number === selectedId
 
           return (
-            <Pressable onPress={() => handleSelect(item.livestock_record_id)}>
+            <Pressable onPress={() => handleSelect(item.livestock_id_number)}>
               <View style={[styles.card, isSelected && styles.selectedCard]}>
                 <Image
                   source={{
@@ -123,7 +133,17 @@ export default function LivestockCardList() {
                     Livestock ID: {item.livestock_id_number}
                   </Text>
 
-                  <Text style={styles.status}>
+                  <Text
+                    style={[
+                      styles.status,
+                      {
+                        color:
+                          item.status?.toLowerCase() === 'verified'
+                            ? '#2e7d32' // green
+                            : '#d32f2f', // red
+                      },
+                    ]}
+                  >
                     Livestock Status: {item.status}
                   </Text>
 
@@ -221,7 +241,6 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#d32f2f',
     marginBottom: 2,
   },
 

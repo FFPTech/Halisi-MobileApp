@@ -29,6 +29,7 @@ import {
   setRecordIdLivestock,
   setRegistrationTimestamp,
   setShowFarmerRegistrationModal,
+  setShowGoToRegistration,
 } from '../../features/farmerSlice'
 import { useUser } from '../../Hooks/useUserGlobal'
 import { getCurrentTimestamp } from '../../utils/utils'
@@ -726,6 +727,11 @@ export default function RegisterFarmers() {
       console.log('Error fetching performance metrics for livestock:', error)
     }
   }
+  const handleManualVerificationLivestock = () => {
+    dispatch(setShowGoToRegistration(false))
+
+    setStep(3)
+  }
 
   const handleSubmitLivestockBiometrics = () => {
     setApiCallInProgress(true)
@@ -782,9 +788,14 @@ export default function RegisterFarmers() {
             // setVerifyScreen(true)
             if (livestockVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
+              // dispatch(setShowGoToRegistration(false))
+              // dispatch(setCloseGotoRegistration())
+              handleManualVerificationLivestock()
               setLivestockPhotoUri(
                 base64Header + livestockVerifyAPIResponse.image,
               )
+              setVerifyScreen(true)
+              setIsLivestockSuccess(true)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
               setIsLivestockSuccess(false)
@@ -795,8 +806,7 @@ export default function RegisterFarmers() {
                 base64Header + livestockVerifyAPIResponse.image,
               )
               setApiCallInProgress(false)
-              setVerifyScreen(true)
-              setIsLivestockSuccess(true)
+
               // setShowFaceMatchOk(true);
             } else {
               setApiCallInProgress(false)
@@ -1140,6 +1150,16 @@ export default function RegisterFarmers() {
           <Text style={{ textAlign: 'center' }}>OK</Text>
         </TouchableOpacity>
       </AppModal>
+
+      {/* <AppModal visible={verifyScreen}>
+        <Text style={{ textAlign: 'center' }}>
+          The Livestock Face did not match the livestock registered. Please
+          proceed to manual verification.
+        </Text>
+        <TouchableOpacity onPress={handleManualVerificationLivestock}>
+          <Text style={{ textAlign: 'center' }}>OK</Text>
+        </TouchableOpacity>
+      </AppModal> */}
     </View>
   )
 }

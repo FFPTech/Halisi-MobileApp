@@ -270,15 +270,20 @@ export const queryLivestockDB = createAsyncThunk<
       institution_id: agent.company_id,
       env: 'Qua',
     }
+
+    console.log('payload data', payload)
+
     const response = await axios.post(
       'https://hal-liv-qua-san-fnapp-v1.azurewebsites.net/api/readlivestocktagid',
       payload,
     )
 
     const res = response?.data
-    console.log(res)
+    // console.log(res)
 
     if (res.identifier === null) {
+      console.log('livetock tag number is null')
+
       dispatch(
         setLivestockEnrollDbData({ identifier: 'N/A', signature: 'N/A' }),
       )
@@ -290,21 +295,23 @@ export const queryLivestockDB = createAsyncThunk<
       dispatch(setOperationLivestock('register'))
       // dispatch(setShowGoToRegistration(true))
       dispatch(setShowLivestockTagModal(true))
+      dispatch(setShowLivestockTagModal(true))
+      dispatch(setShowGoToVerification(true))
       return
     } else {
+      console.log('Livestock tag number is not null')
+      console.log(res.identifier, res.signature)
+
       dispatch(
         setLivestockEnrollDbDataBase({
           identifier: res.identifier,
           signature: res.signature,
         }),
       )
+      dispatch(setOperationLivestock('update'))
+      dispatch(setLivestockEnrollDbData(res))
+      return
     }
-
-    dispatch(setShowLivestockTagModal(true))
-    dispatch(setLivestockEnrollDbData(res))
-
-    dispatch(setOperationLivestock('update'))
-    dispatch(setShowGoToVerification(true))
   } catch (error: any) {
     const status = error?.response?.status
     if (status === 404 || status === 501) {
@@ -358,8 +365,8 @@ const farmerSlice = createSlice({
       state.showGoToRegistration = false
     },
 
-    setCloseGotoRegistration(state, action: PayloadAction<boolean>) {
-      state.showGoToRegistration = action.payload
+    setCloseGotoRegistration(state) {
+      state.showGoToRegistration = false
     },
     setCloseGotoVerification(state, action: PayloadAction<boolean>) {
       state.showGoToVerification = action.payload

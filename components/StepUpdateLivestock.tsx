@@ -10,6 +10,7 @@ import DateInput from './DateInputComponent'
 import Dropdown from './DropDown'
 import FormStepWrapper from './FormStepWrapper'
 import InputField from './InputComponent'
+import LoadingSpinner from './LoadingSpinner'
 
 const livestockTypes = ['Cattle', 'Sheep', 'Goat', 'Porc']
 const livestockOptions = [
@@ -223,7 +224,9 @@ function StepUpdateLivestock() {
     setVerifyNewLivestockModal(false)
     router.replace('/Ratings')
   }
-
+  if (apiInProgress) {
+    return <LoadingSpinner size='large' color=' #2e7d32' />
+  }
   return (
     <FormStepWrapper title='Livestock information'>
       <Text>Fill-in Livestock form</Text>
@@ -234,13 +237,14 @@ function StepUpdateLivestock() {
         onChange={(e) => setTagNumber(e.nativeEvent.text)}
         error={errors.tagNumber}
       />
-
-      <DateInput
-        label='Date of Birth'
-        value={dateOfBirth}
-        onChange={setDateOfBirth}
-        error={errors.dateOfBirth}
-      />
+      <View style={{ paddingHorizontal: 4 }}>
+        <DateInput
+          label='Date of Birth'
+          value={dateOfBirth}
+          onChange={setDateOfBirth}
+          error={errors.dateOfBirth}
+        />
+      </View>
 
       <Dropdown
         label='Livestock Type'
@@ -435,7 +439,6 @@ function StepUpdateLivestock() {
         </Text>
         <View
           style={{
-            flex: 1,
             flexDirection: 'row',
             justifyContent: 'space-around',
             marginTop: 20,
