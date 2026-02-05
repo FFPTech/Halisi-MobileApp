@@ -29,7 +29,6 @@ import {
   setRecordIdLivestock,
   setRegistrationTimestamp,
   setShowFarmerRegistrationModal,
-  setShowGoToRegistration,
 } from '../../features/farmerSlice'
 import { useUser } from '../../Hooks/useUserGlobal'
 import { getCurrentTimestamp } from '../../utils/utils'
@@ -349,6 +348,7 @@ export default function RegisterFarmers() {
           : agent.institution,
         mic_email_id: agent.mic_email_id || '',
         mic_name: agent.mic_name || '',
+        request_status: 'No request',
       })
 
       const data = {
@@ -728,9 +728,8 @@ export default function RegisterFarmers() {
     }
   }
   const handleManualVerificationLivestock = () => {
-    dispatch(setShowGoToRegistration(false))
-
-    setStep(3)
+    setVerifyScreen(false)
+    router.replace('/ManualVerification')
   }
 
   const handleSubmitLivestockBiometrics = () => {
@@ -785,16 +784,16 @@ export default function RegisterFarmers() {
             // let t1 = performance.now();
             // let total = parseInt(t1 - t0);
             // setTotalEnrollTimeFarmer(total);
-            // setVerifyScreen(true)
+            setVerifyScreen(true)
             if (livestockVerifyAPIResponse.match === false) {
               // dispatch({ type: 'SET_API_RESPONSE_IMG_SRC', payload:base64Header + livestockVerifyAPIResponse.image});
               // dispatch(setShowGoToRegistration(false))
               // dispatch(setCloseGotoRegistration())
-              handleManualVerificationLivestock()
+
               setLivestockPhotoUri(
                 base64Header + livestockVerifyAPIResponse.image,
               )
-              setVerifyScreen(true)
+              // setVerifyScreen(true)
               setIsLivestockSuccess(true)
               setApiCallInProgress(false)
               // setSuccessfulAPIcall(true);
@@ -1012,7 +1011,6 @@ export default function RegisterFarmers() {
             toggleCameraFacing={toggleCameraFacing}
             setPhotoBase64={setPhotoBase64}
             handleSubmitLivestock={handleSubmitLivestockBiometrics}
-            showVerifyScreen={verifyScreen}
           />
         )
       case 4:
@@ -1151,15 +1149,14 @@ export default function RegisterFarmers() {
         </TouchableOpacity>
       </AppModal>
 
-      {/* <AppModal visible={verifyScreen}>
+      <AppModal visible={verifyScreen}>
         <Text style={{ textAlign: 'center' }}>
-          The Livestock Face did not match the livestock registered. Please
-          proceed to manual verification.
+          Please proceed to manual verification.
         </Text>
         <TouchableOpacity onPress={handleManualVerificationLivestock}>
           <Text style={{ textAlign: 'center' }}>OK</Text>
         </TouchableOpacity>
-      </AppModal> */}
+      </AppModal>
     </View>
   )
 }

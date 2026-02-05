@@ -11,7 +11,6 @@ import { AppModal } from './AppModal'
 import CommonButton from './CommonButtonComponent'
 import FormStepWrapper from './FormStepWrapper'
 import InputField from './InputComponent'
-import ManualVerification from './ManualVerification'
 import StepCamera from './StepCamera'
 
 const StepLivestock = ({
@@ -28,7 +27,6 @@ const StepLivestock = ({
   toggleCameraFacing,
   setPhotoBase64,
   handleSubmitLivestock,
-  showVerifyScreen,
 }: {
   livestocktag: string
   setLivestockTag: (val: string) => void
@@ -84,8 +82,6 @@ const StepLivestock = ({
           errors={errors.livestockPhotoUri}
           onpress={handleSubmitLivestock}
         />
-      ) : showVerifyScreen ? (
-        <ManualVerification />
       ) : (
         <FormStepWrapper title={'Livestock Authentication'}>
           <InputField

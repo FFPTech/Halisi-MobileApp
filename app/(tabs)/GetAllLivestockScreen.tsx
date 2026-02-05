@@ -91,6 +91,21 @@ export default function LivestockCardList() {
     dispatch(setOperationLivestock('update'))
   }
 
+  const getRequestStatusColor = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return '#2E7D32' // green
+      case 'Not approved':
+        return '#D32F2F' // red
+      case 'Credit Request Submitted':
+        return '#1976D2' // blue
+      case 'No request':
+        return '#9E9E9E' // gray
+      default:
+        return '#555555'
+    }
+  }
+
   return (
     <View style={styles.screen}>
       <FlatList
@@ -147,7 +162,15 @@ export default function LivestockCardList() {
                     Livestock Status: {item.status}
                   </Text>
 
-                  <Text style={styles.text}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: getRequestStatusColor(item.request_status),
+                        fontWeight: '600',
+                      },
+                    ]}
+                  >
                     Request Status: {item.request_status}
                   </Text>
                 </View>

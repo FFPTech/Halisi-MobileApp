@@ -3,6 +3,7 @@ import { router } from 'expo-router'
 import { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { useSelector } from 'react-redux'
+import { getCurrentTimestamp } from '../utils/utils'
 import { AppModal } from './AppModal'
 import CheckboxGroup from './Checkbox'
 import CommonButton from './CommonButtonComponent'
@@ -28,9 +29,10 @@ type FormErrors = {
 }
 
 function StepUpdateLivestock() {
-  const { agent } = useSelector((state: any) => state.user)
+  const { agent, consent } = useSelector((state: any) => state.user)
   const { livestockRecordId, livestockOperation, enrollLivestockDbData } =
     useSelector((state: any) => state.farmer)
+  const { registration_number } = useSelector((state: any) => state.user)
   // 🔹 Input states
   const [tagNumber, setTagNumber] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null)
@@ -60,6 +62,11 @@ function StepUpdateLivestock() {
   const [apiInProgress, setApiInProgress] = useState(false)
   const [successModal, setSuccessModal] = useState(false)
   const [verifyNewLivestockModal, setVerifyNewLivestockModal] = useState(false)
+  const [vetNotes, setVetNotes] = useState('')
+
+  const vet_national_id = agent.national_id
+  const timestamp = getCurrentTimestamp()
+  const consentTimestamp = getCurrentTimestamp()
 
   const vaccinationOptions = [
     'East Coast Fever (ECF)',
@@ -154,27 +161,63 @@ function StepUpdateLivestock() {
     return Object.keys(newErrors).length === 0
   }
   const livestockform = {
-    tagNumber,
-    dateOfBirth,
-    livestockType,
-    marketValue,
-    weight,
-    breed,
-    purpose,
-    health,
-    gender,
-    veterinaryCare,
-    livestockCondition,
-    numOfCalvings,
-    productionStage,
-    farmType,
-    herdSize,
-    expectedMonthlyMilk,
-    actualMonthlyMilk,
-    expectedMonthlyWeight,
-    actualMonthlyWeight,
-    vaccinations,
+    livestock_birthdate: dateOfBirth,
+
+    livestock_market_value: marketValue,
+
+    livestock_weight: weight,
+
+    livestock_breed: breed,
+
+    livestock_type: livestockType,
+
+    livestock_purpose: purpose,
+
+    livestock_health_status: health,
+
+    production_stage: productionStage,
+
+    livestock_veterinary_care: veterinaryCare,
+
+    livestock_gender: gender,
+
+    livestock_condition: livestockCondition,
+
+    livestock_number_of_calvings: numOfCalvings,
+
+    expected_milk_production: expectedMonthlyMilk,
+
+    actual_milk_production: actualMonthlyMilk,
+
+    actual_weight_gain: actualMonthlyWeight,
+
+    expected_weight_gain: expectedMonthlyWeight,
+
+    vet_notes: vetNotes,
+
+    farm_type: farmType,
+
+    herd_size: herdSize,
+
+    vet_name: agent.name,
+
+    livestock_selected_vaccines: vaccinations.join(', '),
+
+    national_id_of_inspecting_vet: vet_national_id,
+
+    veterinarian_registration_number: agent.registration_number,
+
+    veterinarian_halisi_id: agent.agent_id,
+
+    verificationTimestamp: timestamp,
+
+    consent_timestamp: consentTimestamp,
+
+    adjusted_value_after_depreciation: '',
+
+    adjusted_value_percentage_range: '',
   }
+
   // 🔹 API call
   const updatelivestock = async () => {
     try {
@@ -186,7 +229,7 @@ function StepUpdateLivestock() {
         institution_id: agent.company_id || '',
         record_id: livestockRecordId,
         env: 'Qua',
-        operation: livestockOperation,
+        operation: 'update',
         uuid: enrollLivestockDbData.identifier,
       }
 
@@ -237,7 +280,7 @@ function StepUpdateLivestock() {
         onChange={(e) => setTagNumber(e.nativeEvent.text)}
         error={errors.tagNumber}
       />
-      <View style={{ paddingHorizontal: 4 }}>
+      <View style={{ paddingHorizontal: 16 }}>
         <DateInput
           label='Date of Birth'
           value={dateOfBirth}
@@ -416,6 +459,13 @@ function StepUpdateLivestock() {
         selectedValues={vaccinations}
         onChange={setVaccinations}
         error={errors.vaccinations}
+      />
+
+      <InputField
+        label='Vet Notes'
+        value={vetNotes}
+        onChange={(e) => setVetNotes(e.nativeEvent.text)}
+        error={errors.vetNotes}
       />
 
       <CommonButton
