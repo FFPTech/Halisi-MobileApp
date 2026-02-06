@@ -1166,7 +1166,7 @@ export default function RegisterFarmers() {
   using the app, you can either turn off the 'Use Population Registration Verification' toggle and enter your ID number manually,or register with the Kenyan Population Registration Systemand then try again in Halisi.`}
         </Text>
         <TouchableOpacity onPress={() => dispatch(closeShowModalNotFound())}>
-          <Text style={{ textAlign: 'center' }}>OK</Text>
+          <Text style={{ textAlign: 'center', marginTop: 10 }}>OK</Text>
         </TouchableOpacity>
       </AppModal>
     </View>

@@ -137,6 +137,7 @@ export const verifyNIN = createAsyncThunk<
         dispatch(setIPRSMessage(res.message))
         dispatch(setApiCallInProgress(false))
         dispatch(showNoIPRS(true))
+
         dispatch(setShowModalNotFound(true))
 
         return
@@ -144,6 +145,7 @@ export const verifyNIN = createAsyncThunk<
 
       if (!statusFound) {
         dispatch(setApiCallInProgress(false))
+
         dispatch(setShowModalNotFound(true))
         return
       }
@@ -170,6 +172,7 @@ export const verifyNIN = createAsyncThunk<
       dispatch(queryDB({ farmerNationalNumber, selectedCountry, agent }))
     } catch (error: any) {
       console.log('IPRS ERROR:', error?.response?.data || error.message)
+      dispatch(setShowModalNotFound(true))
       dispatch(setApiCallInProgress(false))
       dispatch(showNoIPRS(true))
     }

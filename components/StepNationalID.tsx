@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  closeShowModalNotFound,
   closeValidModal,
   handleShowValidNINOkAlert,
   openShowCameraComponent,
@@ -207,21 +206,7 @@ export default function StepNationalId({
               numbersOnly // <-- show error under input
             />
           </View>
-          <AppModal visible={showModalNotFound}>
-            <Text style={{ textAlign: 'center' }}>
-              {`This National Identification Number is not found in the Population
-              Registration System. To continue using the app, you can either
-              turn off the 'Use Population Registration System Verification'
-              toggle and enter your ID number manually, or register with the
-              Kenyan Population Registration System and then try again in
-              Halisi.`}
-            </Text>
-            <TouchableOpacity
-              onPress={() => dispatch(closeShowModalNotFound())}
-            >
-              <Text>ok</Text>
-            </TouchableOpacity>
-          </AppModal>
+
           <AppModal visible={showModalValid}>
             <Text
               style={{
