@@ -1,50 +1,215 @@
-# Welcome to your Expo app 👋
+# React Native Expo App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This project is a React Native application built with **Expo**. This README explains how to set up your environment and run the app locally.
 
-## Get started
+---
 
-1. Install dependencies
+## Prerequisites
 
-   ```bash
-   npm install
-   ```
+Make sure you have the following installed:
 
-2. Start the app
+- **Node.js** (LTS recommended)
+- **npm** or **yarn**
+- **Expo CLI**
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Install Expo CLI globally (optional):
 
 ```bash
-npm run reset-project
+npm install -g expo-cli
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+> You can also use `npx expo` without installing Expo globally.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## Installation
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Clone the repository:
 
-## Join the community
+```bash
+git clone https://github.com/Divine-fit-for-purpose/Halisi-Livestock.git
+cd  Halisi-Livestock
+cd  Halisi-Mobile-app
+```
 
-Join our community of developers creating universal apps.
+2. Install dependencies:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm install
+# or
+yarn install
+```
+
+---
+
+## Running the App
+
+Start the development server:
+
+```bash
+npx expo start
+# or
+npm start
+# or
+yarn start
+```
+
+This will open Expo Dev Tools in your browser.
+
+---
+
+## Running on a Device
+
+### Physical Device
+
+1. Install **Expo Go** from the App Store (iOS) or Google Play (Android)
+2. Scan the QR code shown in the terminal or browser
+
+### Emulator / Simulator
+
+**iOS Simulator (macOS only):**
+
+```bash
+npx expo start --ios
+```
+
+**Android Emulator:**
+
+```bash
+npx expo start --android
+```
+
+Make sure the emulator is running before executing the command.
+
+---
+
+## Project Structure
+
+```text
+.
+├── assets/          # Images, fonts, and static files
+├── components/      # Reusable components
+├── screens/         # App screens
+├── App.js           # Root component
+├── app.json         # Expo configuration
+├── package.json     # Dependencies and scripts
+```
+
+---
+
+## Environment Variables
+
+If your app uses environment variables, create a `.env` file in the root directory:
+
+```env
+API_URL=https://example.com
+```
+
+Ensure environment variables are properly configured in Expo.
+
+---
+
+## Useful Commands
+
+- Start dev server:
+
+  ```bash
+  npx expo start
+  ```
+
+- Clear cache:
+
+  ```bash
+  npx expo start -c
+  ```
+
+- Run tests (if applicable):
+  ```bash
+  npm test
+  ```
+
+---
+
+## Building for Production
+
+To build the app using **EAS**:
+
+```bash
+npm install -g eas-cli
+eas build
+```
+
+## Features
+
+The following features have been implemented and completed in this application:
+
+### 1. Farmer & Livestock Registration Flow ✅
+
+The registration flow consists of multiple steps, all of which have been completed:
+
+#### Farmer Registration
+
+- Login
+- Farmer authentication
+- Farmer biometrics capture
+
+#### Livestock Registration
+
+- Livestock registration
+- Livestock biometrics capture
+
+---
+
+### 2. Verification ✅
+
+The following verification processes have been completed:
+
+- Farmer verification
+- Livestock verification
+
+---
+
+### 3. Loan Request ❌
+
+- Loan request feature  
+  _(Not implemented yet)_
+
+## Next Steps
+
+The following items are planned for the next phase of the application:
+
+### 1. Loan Request
+
+- Implement loan request flow
+- Capture and validate loan details
+- Submit loan request for processing
+
+### 2. Code Quality Improvements
+
+- Code cleaning
+- Performance optimization
+- Refactoring for maintainability and scalability
+
+### 3. Deployment
+
+- Prepare production build
+- Deploy application to **Google Play Store**
+
+## Troubleshooting
+
+- Ensure Node.js is up to date
+- Clear Expo cache if issues occur
+- Restart Expo Go or the emulator
+
+---
+
+## Learn More
+
+- https://docs.expo.dev/
+- https://reactnative.dev/
+
+---
+
+## License
+
+Add your license information here.
