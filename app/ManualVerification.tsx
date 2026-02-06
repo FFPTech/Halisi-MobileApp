@@ -6,13 +6,15 @@ import { setShowGoToRegistration } from '../features/farmerSlice'
 import { useUser } from '../Hooks/useUserGlobal'
 
 export default function ManualVerification() {
-  const { livestockResponseData } = useSelector((state: any) => state.farmer)
+  const { livestockResponseData, livestockDBData } = useSelector(
+    (state: any) => state.farmer,
+  )
   const dispatch = useDispatch()
   const { setStep } = useUser()
   const base64Header = 'data:image/jpeg;base64,'
 
   if (
-    !livestockResponseData?.original_image ||
+    !livestockDBData?.db_data[0]?.face_image ||
     !livestockResponseData?.face_image
   ) {
     return (
@@ -50,7 +52,7 @@ export default function ManualVerification() {
         <View style={{ flex: 1, marginTop: 20, gap: 20 }}>
           <Image
             source={{
-              uri: base64Header + livestockResponseData.db_data[0]?.face_image,
+              uri: base64Header + livestockDBData?.db_data[0]?.face_image,
             }}
             style={{
               width: '100%',

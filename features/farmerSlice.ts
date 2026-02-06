@@ -43,6 +43,7 @@ interface FarmerState {
   livestockTagModal: boolean
   livestockResponseData: any
   enrollLivestockDbData: any
+  livestockDBData: any
 
   /* -------- UI -------- */
   apiCallInProgress: boolean
@@ -83,6 +84,7 @@ const initialState: FarmerState = {
   livestockTagModal: false,
   livestockResponseData: {},
   enrollLivestockDbData: null,
+  livestockDBData: null,
   /* -------- UI -------- */
   apiCallInProgress: false,
   iprsStatus: false,
@@ -135,14 +137,14 @@ export const verifyNIN = createAsyncThunk<
         dispatch(setIPRSMessage(res.message))
         dispatch(setApiCallInProgress(false))
         dispatch(showNoIPRS(true))
-        dispatch(showModalNotFound(true))
+        dispatch(setShowModalNotFound(true))
 
         return
       }
 
       if (!statusFound) {
         dispatch(setApiCallInProgress(false))
-        dispatch(showModalNotFound(true))
+        dispatch(setShowModalNotFound(true))
         return
       }
 
@@ -300,6 +302,9 @@ export const queryLivestockDB = createAsyncThunk<
       return
     } else {
       console.log('Livestock tag number is not null')
+      dispatch(setLivestockDBData(res))
+      // console.log('Face image', res.db_data[0]?.face_image)
+
       console.log(res.identifier, res.signature)
 
       dispatch(
@@ -394,7 +399,7 @@ const farmerSlice = createSlice({
     handleShowValidNINOkAlert(state, action: PayloadAction<boolean>) {
       state.showValidNINOkAlert = action.payload
     },
-    showModalNotFound(state, action: PayloadAction<boolean>) {
+    setShowModalNotFound(state, action: PayloadAction<boolean>) {
       state.showModalNotFound = action.payload
     },
     closeShowModalNotFound(state) {
@@ -457,6 +462,9 @@ const farmerSlice = createSlice({
     setLivestockEnrollDbDataBase(state, action: PayloadAction<any>) {
       state.enrollLivestockDbData = action.payload
     },
+    setLivestockDBData(state, action: PayloadAction<any>) {
+      state.livestockDBData = action.payload
+    },
   },
 })
 
@@ -479,7 +487,7 @@ export const {
   showNoIPRS,
   showValidNINNoAlert,
   handleShowValidNINOkAlert,
-  showModalNotFound,
+  setShowModalNotFound,
   setShowModalIsValid,
   closeValidModal,
   closeShowModalNotFound,
@@ -500,6 +508,7 @@ export const {
   setRatingsToFalse,
   setRatingsToTrue,
   setLivestockResponse,
+  setLivestockDBData,
 } = farmerSlice.actions
 
 export default farmerSlice.reducer

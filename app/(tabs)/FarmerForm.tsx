@@ -23,6 +23,7 @@ import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
 import StepUpdateLivestock from '../../components/StepUpdateLivestock'
 import {
+  closeShowModalNotFound,
   OpenOperationScreen,
   setLivestockResponse,
   setRecordId,
@@ -46,7 +47,7 @@ export default function RegisterFarmers() {
     recordId,
 
     enrollDbData,
-
+    showModalNotFound,
     registrationTimestamp,
     livestockRecordId,
     enrollLivestockDbData,
@@ -1154,6 +1155,17 @@ export default function RegisterFarmers() {
           Please proceed to manual verification.
         </Text>
         <TouchableOpacity onPress={handleManualVerificationLivestock}>
+          <Text style={{ textAlign: 'center' }}>OK</Text>
+        </TouchableOpacity>
+      </AppModal>
+
+      <AppModal visible={showModalNotFound}>
+        <Text style={{ textAlign: 'center' }}>
+          {`
+          This National identification Number is not found in the Population Registration System. To continue
+  using the app, you can either turn off the 'Use Population Registration Verification' toggle and enter your ID number manually,or register with the Kenyan Population Registration Systemand then try again in Halisi.`}
+        </Text>
+        <TouchableOpacity onPress={() => dispatch(closeShowModalNotFound())}>
           <Text style={{ textAlign: 'center' }}>OK</Text>
         </TouchableOpacity>
       </AppModal>
