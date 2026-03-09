@@ -18,6 +18,8 @@ import { MultiStepComponent } from '../../components/MultiStep'
 
 import { send } from '@emailjs/react-native'
 import { router } from 'expo-router'
+import OverviewScreen from '../../components/Overview'
+import RequestScreen from '../../components/Request'
 import StepLivestock from '../../components/StepLivestock'
 import StepNationalId from '../../components/StepNationalID'
 import StepPersonalInfo from '../../components/StepPersonalInfo'
@@ -1016,6 +1018,10 @@ export default function RegisterFarmers() {
         )
       case 4:
         return <StepUpdateLivestock />
+      case 5:
+        return <OverviewScreen />
+      case 6:
+        return <RequestScreen />
     }
   }
 
