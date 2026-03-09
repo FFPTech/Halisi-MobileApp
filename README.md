@@ -27,8 +27,7 @@ npm install -g expo-cli
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/Divine-fit-for-purpose/Halisi-Livestock.git
-cd  Halisi-Livestock
+git clone https://github.com/FFPTech/Halisi-MobileApp.git
 cd  Halisi-Mobile-app
 ```
 
